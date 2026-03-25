@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCESP - INTRANET OFICIAL</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --bg-principal: #0a0a0c;
+            --bg-card: #16161a;
+            --pcesp-ouro: #d4af37;
+            --pcesp-ouro-dark: #aa8c2c;
+            --texto-claro: #f0f0f3;
+            --borda: #2a2a2e;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--texto-claro);
+            margin: 0; padding: 0; padding-bottom: 50px;
+        }
+
+        /* --- CABEÇALHO --- */
+        header {
+            background-color: #000;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--pcesp-ouro);
+        }
+
+        header img { max-width: 90px; margin-bottom: 15px; }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(to bottom, #ffffff 0%, #888888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.9));
+        }
+
+        /* --- BARRA DE NAVEGAÇÃO --- */
+        .top-bar {
+            background-color: #111;
+            padding: 15px;
+            border-bottom: 1px solid var(--borda);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0; z-index: 900;
+        }
+
+        .menu-links { display: flex; gap: 15px; }
+        .menu-links a {
+            color: #666; text-decoration: none;
+            font-size: 12px; font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .menu-links a.active { color: var(--pcesp-ouro); border-bottom: 2px solid var(--pcesp-ouro); }
+
+        #search-input {
+            background-color: #000; border: 1px solid var(--borda);
+            color: #fff; padding: 8px 15px; border-radius: 20px; width: 180px;
+        }
+
+        /* --- NOVO SELETOR DE ABAS (POSTAGEM) --- */
+        .selector-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .type-btn {
+            flex: 1;
+            min-width: 100px;
+            background: #000;
+            border: 1px solid var(--borda);
+            color: #888;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .type-btn.selected {
+            border-color: var(--pcesp-ouro);
+            color: var(--pcesp-ouro);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        /* --- ÁREA ADMIN --- */
+        #form-admin {
+            display: none; background: var(--bg-card); padding: 25px;
+            border: 1px solid var(--pcesp-ouro); margin: 20px auto; max-width: 800px;
+            border-radius: 8px;
+        }
+
+        input, textarea {
+            width: 100%; padding: 14px; margin: 8px 0;
+            background: #000; border: 1px solid var(--borda); color: #fff;
+            border-radius: 4px; font-size: 15px;
+        }
+
+        button#postar {
+            background: var(--pcesp-ouro); color: #000; font-weight: 900;
+            width: 100%; padding: 16px; border: none; cursor: pointer; 
+            text-transform: uppercase; margin-top: 10px; border-radius: 4px;
+        }
+
+        /* --- CARDS --- */
+        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+        .post-card {
+            background: var(--bg-card); padding: 20px; border-radius: 8px;
+            border: 1px solid var(--borda); margin-bottom: 15px;
+        }
+        .post-card.tipo-ficha { border-top: 3px solid var(--pcesp-ouro); }
+        .post-card.tipo-caso { border-top: 3px solid #007bff; }
+
+        .post-meta { margin-top: 15px; display: flex; gap: 10px; align-items: center; opacity: 0.6; font-size: 12px; }
+        .edit-btn { background: #fff; color: #000; border: none; padding: 6px 12px; cursor: pointer; font-weight: bold; }
+        .del-btn { background: #d9534f; color: #fff; border: none; padding: 6px 12px; cursor: pointer; font-weight: bold; }
+
+        #login-trigger { background: none; border: none; color: #333; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png" alt="Brasão PCESP">
+    <h1>Polícia Civil do Estado de São Paulo</h1>
+</header>
+
+<div class="top-bar">
+    <div class="menu-links">
+        <a href="#" id="link-todos" class="active" onclick="filtrarTipo('todos')">Início</a>
+        <a href="#" id="link-comunicado" onclick="filtrarTipo('comunicado')">Comunicados</a>
+        <a href="#" id="link-ficha" onclick="filtrarTipo('ficha')">Fichas</a>
+        <a href="#" id="link-caso" onclick="filtrarTipo('caso')">Casos</a>
+        <button id="login-trigger" onclick="acessoAdmin()">🔒</button>
+    </div>
+    <input type="text" id="search-input" placeholder="🔍 Buscar...">
+</div>
+
+<div class="container">
+    <!-- FORMULÁRIO COM O NOVO SELETOR -->
+    <div id="form-admin" class="card">
+        <h3 id="form-title" style="color:var(--pcesp-ouro); margin:0 0 10px 0;">NOVO REGISTRO</h3>
+        
+        <p style="font-size:11px; color:#666; margin:0;">SELECIONE A CATEGORIA:</p>
+        <div class="selector-group">
+            <div class="type-btn selected" data-value="comunicado" onclick="selectType(this)">Comunicado</div>
+            <div class="type-btn" data-value="ficha" onclick="selectType(this)">Ficha Policial</div>
+            <div class="type-btn" data-value="caso" onclick="selectType(this)">Caso / I.P.</div>
+        </div>
+
+        <input type="hidden" id="edit-id">
+        <input type="text" id="titulo" placeholder="Título ou Nome do Policial">
+        <textarea id="conteudo" rows="6" placeholder="Escreva os detalhes aqui..."></textarea>
+        
+        <button id="postar">Protocolar Registro</button>
+        <button id="cancelar-edit" style="display:none; width:100%; margin-top:10px; background:#222; color:#fff; border:none; padding:10px;">Cancelar</button>
+    </div>
+
+    <div id="feed"></div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCvPMMi1IEGmt1IptewaPeZdEb_rJs886w",
+        authDomain: "pcesp-intranet-dc705.firebaseapp.com",
+        databaseURL: "https://pcesp-intranet-dc705-default-rtdb.firebaseio.com",
+        projectId: "pcesp-intranet-dc705",
+        storageBucket: "pcesp-intranet-dc705.firebasestorage.app",
+        messagingSenderId: "826676672604",
+        appId: "1:826676672604:web:1b3c00107fec5c9afd8e99"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    let isAdmin = false;
+    let postsData = [];
+    let filtroAtual = 'todos';
+    let selectedType = 'comunicado'; // Tipo padrão ao abrir
+
+    // Função para gerenciar o novo seletor de botões
+    function selectType(element) {
+        document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('selected'));
+        element.classList.add('selected');
+        selectedType = element.getAttribute('data-value');
+    }
+
+    function acessoAdmin() {
+        const senha = prompt("Acesso Restrito:");
+        if (senha === "KaqFarmaAura") {
+            isAdmin = true;
+            document.getElementById('form-admin').style.display = 'block';
+            renderizarPosts(postsData);
+            alert("Acesso Autorizado.");
+        }
+    }
+
+    document.getElementById('postar').onclick = function() {
+        const id = document.getElementById('edit-id').value;
+        const post = {
+            tipo: selectedType, // Usa o valor do seletor moderno
+            titulo: document.getElementById('titulo').value,
+            conteudo: document.getElementById('conteudo').value,
+            dataStr: new Date().toLocaleString('pt-BR')
+        };
+
+        if(post.titulo && post.conteudo) {
+            if(id) {
+                database.ref('registros/' + id).update(post).then(() => resetForm());
+            } else {
+                database.ref('registros').push(post).then(() => resetForm());
+            }
+        }
+    };
+
+    function resetForm() {
+        document.getElementById('titulo').value = '';
+        document.getElementById('conteudo').value = '';
+        document.getElementById('edit-id').value = '';
+        document.getElementById('postar').innerText = 'Protocolar Registro';
+        document.getElementById('cancelar-edit').style.display = 'none';
+    }
+
+    function apagarRegistro(id) {
+        if(confirm("Confirmar exclusão?")) {
+            database.ref('registros/' + id).remove();
+        }
+    }
+
+    function prepararEdicao(id, tipo, tit, cont) {
+        document.getElementById('edit-id').value = id;
+        // Atualiza visual do seletor na edição
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.classList.toggle('selected', btn.getAttribute('data-value') === tipo);
+        });
+        selectedType = tipo;
+        document.getElementById('titulo').value = tit;
+        document.getElementById('conteudo').value = cont;
+        document.getElementById('postar').innerText = 'Atualizar Registro';
+        document.getElementById('cancelar-edit').style.display = 'block';
+        window.scrollTo(0,0);
+    }
+
+    function filtrarTipo(tipo) {
+        filtroAtual = tipo;
+        document.querySelectorAll('.menu-links a').forEach(a => a.classList.remove('active'));
+        document.getElementById('link-' + tipo).classList.add('active');
+        executarFiltros();
+    }
+
+    function executarFiltros() {
+        const termo = document.getElementById('search-input').value.toLowerCase();
+        const filtrados = postsData.filter(p => {
+            const bateTipo = (filtroAtual === 'todos' || p.tipo === filtroAtual);
+            const bateBusca = (p.titulo + p.conteudo).toLowerCase().includes(termo);
+            return bateTipo && bateBusca;
+        });
+        renderizarPosts(filtrados);
+    }
+
+    document.getElementById('search-input').oninput = executarFiltros;
+
+    database.ref('registros').on('value', (snapshot) => {
+        const val = snapshot.val();
+        postsData = val ? Object.keys(val).map(k => ({id: k, ...val[k]})).reverse() : [];
+        executarFiltros();
+    });
+
+    function renderizarPosts(posts) {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '';
+        posts.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'post-card' + (p.tipo === 'ficha' ? ' tipo-ficha' : '') + (p.tipo === 'caso' ? ' tipo-caso' : '');
+            const btnDisp = isAdmin ? 'inline-block' : 'none';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between">
+                    <h3 style="color:white">${p.titulo}</h3>
+                    <span style="color:var(--pcesp-ouro); font-size:9px; border:1px solid #333; padding:2px 5px; border-radius:3px">${p.tipo.toUpperCase()}</span>
+                </div>
+                <p style="margin-top:10px; font-size:14px; color:#ccc">${p.conteudo}</p>
+                <div class="post-meta">
+                    <span style="flex-grow:1">${p.dataStr}</span>
+                    <button class="edit-btn" style="display:${btnDisp}" onclick="prepararEdicao('${p.id}','${p.tipo}','${p.titulo.replace(/'/g,"\\'")}','${p.conteudo.replace(/'/g,"\\'")}')">EDITAR</button>
+                    <button class="del-btn" style="display:${btnDisp}" onclick="apagarRegistro('${p.id}')">APAGAR</button>
+                </div>
+            `;
+            feed.appendChild(card);
+        });
+    }
+</script>
+</body>
+</html>
