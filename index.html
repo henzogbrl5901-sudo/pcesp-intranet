@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SISTEMA PCESP | BRASIL LEGACY</title>
+    <title>INTRANET TÁTICA | PCESP</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,48 +11,147 @@
 
     <style>
         :root {
-            --gold: #ffcc00; --blue: #0a192f; --dark: #02060c;
-            --glass: rgba(255, 255, 255, 0.05); --danger: #ff4747; --info: #00d4ff;
+            --pcesp-gold: #ffcc00;
+            --pcesp-blue: #0a192f;
+            --pcesp-dark: #02060c;
+            --glass: rgba(255, 255, 255, 0.05);
+            --danger: #ff4747;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: radial-gradient(circle at top, #102a43, var(--dark)); color: #e6f1ff; font-family: 'Segoe UI', sans-serif; min-height: 100vh; padding-bottom: 90px; }
 
-        /* HEADER COM BRASÃO CORRIGIDO */
-        header { 
-            background: rgba(0, 0, 0, 0.9); padding: 20px; text-align: center; 
-            border-bottom: 2px solid var(--gold); backdrop-filter: blur(10px); 
-            position: sticky; top: 0; z-index: 100; 
-        }
-        
-        .logo-pcesp { 
-            width: 80px; height: 80px; 
-            object-fit: contain;
-            filter: drop-shadow(0 0 10px var(--gold)); 
-            margin-bottom: 5px;
+        body { 
+            background: radial-gradient(circle at top, #102a43, var(--pcesp-dark));
+            color: #e6f1ff; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 80px;
         }
 
-        .app-container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        .card { background: var(--glass); border: 1px solid rgba(255, 215, 0, 0.1); border-radius: 12px; padding: 18px; margin-bottom: 15px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
-        
-        h2 { font-size: 0.9rem; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-left: 3px solid var(--gold); padding-left: 10px; }
+        header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 25px 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--pcesp-gold);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-        .news-box { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-right: 3px solid var(--info); transition: 0.3s; }
-        .news-box.transparencia { border-right-color: var(--danger); }
-        .news-date { font-size: 0.65rem; color: var(--gold); display: block; margin-bottom: 5px; opacity: 0.8; }
-        .news-title { font-weight: bold; font-size: 1rem; margin-bottom: 5px; color: #fff; }
-        .news-content { font-size: 0.85rem; color: #bdc3c7; line-height: 1.4; }
+        .logo-container img { width: 70px; filter: drop-shadow(0 0 10px var(--pcesp-gold)); }
+        .header-title { 
+            font-size: 1.1rem; 
+            font-weight: 800; 
+            letter-spacing: 3px; 
+            margin-top: 10px; 
+            text-transform: uppercase;
+            color: var(--pcesp-gold);
+        }
 
-        input, textarea, select { width: 100%; background: rgba(0,0,0,0.7); border: 1px solid #2c3e50; color: #fff; padding: 14px; border-radius: 8px; margin-bottom: 12px; font-size: 1rem; }
-        input:focus { border-color: var(--gold); outline: none; }
-        
-        .btn-operacional { background: linear-gradient(135deg, #ffcc00, #d4a017); color: #000; border: none; width: 100%; padding: 16px; font-weight: 900; border-radius: 8px; text-transform: uppercase; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3); }
-        .btn-operacional:active { transform: scale(0.96); }
+        .app-container { padding: 20px; max-width: 600px; margin: 0 auto; }
 
-        nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.95); display: flex; justify-content: space-around; padding: 12px 0; border-top: 2px solid var(--gold); box-shadow: 0 -5px 20px rgba(0,0,0,0.8); }
-        .nav-link { color: #555; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; transition: 0.3s; }
-        .nav-link i { font-size: 1.4rem; display: block; margin-bottom: 4px; }
-        .nav-link.active { color: var(--gold); text-shadow: 0 0 10px rgba(255,204,0,0.5); }
+        .card {
+            background: var(--glass);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h2 { 
+            font-size: 0.9rem; 
+            color: var(--pcesp-gold); 
+            text-transform: uppercase; 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            border-left: 3px solid var(--pcesp-gold);
+            padding-left: 10px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #1a2233;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .btn-operacional {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            font-weight: 900;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,153,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-operacional:active { transform: scale(0.98); filter: brightness(0.9); }
+
+        .warning-box {
+            background: rgba(255, 71, 71, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.8rem;
+            color: #ffbaba;
+            margin-bottom: 20px;
+        }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid var(--pcesp-gold);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+        }
+
+        .nav-link {
+            color: #4b5d67;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.55rem;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .nav-link i { font-size: 1.2rem; display: block; margin-bottom: 5px; }
+        .nav-link.active { color: var(--pcesp-gold); }
+
+        /* ESTILO DOS POSTS */
+        .post-item {
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 2px solid var(--pcesp-gold);
+        }
+        .post-meta { font-size: 0.7rem; color: var(--pcesp-gold); margin-bottom: 5px; font-weight: bold; }
+        .post-content { font-size: 0.9rem; line-height: 1.4; color: #ccc; }
 
         .hidden { display: none !important; }
     </style>
@@ -60,162 +159,198 @@
 <body>
 
 <header>
-    <img src="https://logodownload.org/wp-content/uploads/2019/08/policia-civil-sp-logo.png" 
-         onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png/600px-Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png'"
-         class="logo-pcesp" alt="Brasão PCESP">
-    <div style="color:var(--gold); font-weight:900; letter-spacing:3px; font-size:1rem; margin-top:5px;">PCESP | INTRANET</div>
-    <div style="font-size: 0.6rem; color: #888; text-transform: uppercase;">Unidade de Inteligência Brasil Legacy</div>
+    <div class="logo-container">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png/600px-Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png" alt="PCESP">
+    </div>
+    <div class="header-title">Intranet Operacional</div>
 </header>
 
 <div class="app-container">
     
-    <div id="aba-anuncios" class="page-content">
+    <!-- ABA: HOME (ANUNCIOS) -->
+    <div id="aba-home" class="page-content">
+        <div class="warning-box">
+            <i class="fas fa-gavel"></i> <b>CÓDIGO PENAL ART. 340:</b> Falsa comunicação de crime gera prisão e expulsão.
+        </div>
         <div class="card">
             <h2><i class="fas fa-bullhorn"></i> Comunicados Oficiais</h2>
-            <div id="lista-anuncios"><p style="text-align:center; padding:20px; color:#666;">Aguardando novas ordens...</p></div>
+            <div id="feed-anuncios">
+                <!-- Posts de Anuncio carregam aqui -->
+            </div>
         </div>
     </div>
 
+    <!-- ABA: TRANSPARENCIA -->
     <div id="aba-transparencia" class="page-content hidden">
         <div class="card">
-            <h2><i class="fas fa-search"></i> Diário Oficial (Transparência)</h2>
-            <div id="lista-transparencia"><p style="text-align:center; padding:20px; color:#666;">Sem movimentações registradas.</p></div>
+            <h2><i class="fas fa-eye"></i> Portal da Transparência</h2>
+            <div id="feed-transparencia">
+                <!-- Posts de Transparencia carregam aqui -->
+            </div>
         </div>
     </div>
 
+    <!-- ABA: B.O -->
     <div id="aba-bo" class="page-content hidden">
         <div class="card">
-            <h2><i class="fas fa-shield-alt"></i> Terminal de Ocorrências</h2>
-            <select id="tipo-registro">
-                <option value="bo">Boletim de Ocorrência (B.O)</option>
-                <option value="denuncia">Denúncia Anônima (181)</option>
-            </select>
-            <input type="text" id="reg-nome" placeholder="Identificação do Agente/Civil">
-            <textarea id="reg-texto" rows="6" placeholder="Relato fiel dos acontecimentos..."></textarea>
-            <button class="btn-operacional" onclick="enviarRegistro()">Transmitir para o QG</button>
+            <h2><i class="fas fa-edit"></i> Novo Boletim de Ocorrência</h2>
+            <input type="text" id="bo-nome" placeholder="Nome Completo do Envolvido">
+            <textarea id="bo-relato" rows="6" placeholder="Relato detalhado dos fatos..."></textarea>
+            <button class="btn-operacional" onclick="enviarBO()">Protocolar Registro</button>
         </div>
     </div>
 
-    <div id="aba-admin" class="page-content hidden">
-        <div class="card" style="border-color: var(--info);">
-            <h2><i class="fas fa-plus-square"></i> Painel de Comando</h2>
+    <!-- ABA: DENÚNCIA -->
+    <div id="aba-denuncia" class="page-content hidden">
+        <div class="card">
+            <h2><i class="fas fa-user-secret"></i> Disque Denúncia Anônima</h2>
+            <input type="text" id="den-local" placeholder="Localização">
+            <textarea id="den-relato" rows="6" placeholder="Detalhes da denúncia..."></textarea>
+            <button class="btn-operacional" style="background: linear-gradient(135deg, #ff4747, #b30000); color: white;" onclick="enviarDenuncia()">Enviar Sigilosamente</button>
+        </div>
+    </div>
+
+    <!-- ABA: RESTRITO -->
+    <div id="aba-restrito" class="page-content hidden">
+        <!-- PAINEL DE POSTAGEM (SÓ ADMIN) -->
+        <div class="card" style="border-color: var(--pcesp-gold)">
+            <h2><i class="fas fa-plus-circle"></i> Gerenciar Postagens</h2>
             <select id="post-tipo">
-                <option value="anuncio">Publicar em: ANÚNCIOS</option>
-                <option value="transparencia">Publicar em: TRANSPARÊNCIA</option>
+                <option value="anuncio">Postar em: Anúncios</option>
+                <option value="transparencia">Postar em: Transparência</option>
             </select>
-            <input type="text" id="post-titulo" placeholder="Título do Comunicado">
-            <textarea id="post-conteudo" rows="4" placeholder="Escreva a notícia ou alteração de cargo..."></textarea>
-            <button class="btn-operacional" style="background:var(--info);" onclick="publicarNoticia()">Publicar no Portal</button>
+            <input type="text" id="post-autor" placeholder="Seu Nome/Cargo">
+            <textarea id="post-texto" rows="3" placeholder="Conteúdo da postagem..."></textarea>
+            <button class="btn-operacional" onclick="salvarPost()">Publicar no Site</button>
         </div>
 
         <div class="card">
-            <h2><i class="fas fa-calculator"></i> Cálculo de Pena</h2>
-            <div id="calc-crimes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
-            <textarea id="res-pena" rows="5" readonly style="margin-top:15px; background:#000; border-color:var(--gold); font-family:monospace; color:var(--gold);"></textarea>
-            <button class="btn-operacional" onclick="copiarPena()"><i class="fas fa-copy"></i> Copiar Guia de Prisão</button>
+            <h2><i class="fas fa-calculator"></i> Cálculo de Pena Tática</h2>
+            <div id="calc-container" style="margin-bottom: 20px;"></div>
+            <textarea id="txt-calculado" rows="5" readonly style="background: #000; border-color: var(--pcesp-gold); font-family: monospace; font-size: 0.8rem;"></textarea>
+            <button class="btn-operacional" onclick="copiarPena()">Copiar Dados</button>
         </div>
-        <button class="btn-operacional" style="background:#1a1a1a; color:#fff; margin-top:10px;" onclick="sairAdmin()">Encerrar Sessão</button>
+        <button class="btn-operacional" style="background: #1a2233; color: #fff; margin-top: 10px;" onclick="location.reload()">Sair do Painel</button>
     </div>
 
 </div>
 
 <nav>
-    <a href="#" class="nav-link active" onclick="navegar('anuncios', this)"><i class="fas fa-newspaper"></i>Avisos</a>
-    <a href="#" class="nav-link" onclick="navegar('transparencia', this)"><i class="fas fa-balance-scale"></i>Transparência</a>
-    <a href="#" class="nav-link" onclick="navegar('bo', this)"><i class="fas fa-file-contract"></i>Registrar</a>
-    <a href="#" class="nav-link" onclick="acessoAdmin()"><i class="fas fa-user-shield"></i>Admin</a>
+    <a href="javascript:void(0)" class="nav-link active" onclick="navegar('home', this)"><i class="fas fa-house-chimney"></i>Anúncios</a>
+    <a href="javascript:void(0)" class="nav-link" onclick="navegar('transparencia', this)"><i class="fas fa-bullseye"></i>Transparência</a>
+    <a href="javascript:void(0)" class="nav-link" onclick="navegar('bo', this)"><i class="fas fa-clipboard-list"></i>B.O.</a>
+    <a href="javascript:void(0)" class="nav-link" onclick="navegar('denuncia', this)"><i class="fas fa-mask"></i>Denúncia</a>
+    <a href="javascript:void(0)" class="nav-link" onclick="acessoRestrito()"><i class="fas fa-fingerprint"></i>Restrito</a>
 </nav>
 
 <script>
     const fbConfig = { databaseURL: "https://pcesp-rp-default-rtdb.firebaseio.com/" };
-    const webhook = "https://discord.com/api/webhooks/1486511741881024644/_Q5zOKkiypYn_ivTAVS6brkO6IAD0uW9C7CTRA8DMq6nvVyw_rXt-k6Nih9VHs3sjJTi";
+    const webhookURL = "https://discord.com/api/webhooks/1486511741881024644/_Q5zOKkiypYn_ivTAVS6brkO6IAD0uW9C7CTRA8DMq6nvVyw_rXt-k6Nih9VHs3sjJTi";
 
     firebase.initializeApp(fbConfig);
     const db = firebase.database();
 
-    function navegar(id, el) {
-        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById('aba-' + id).classList.remove('hidden');
-        el.classList.add('active');
-    }
+    const CRIMES_LIST = [
+        { n: "Homicídio", p: 30 }, { n: "Tráfico de Drogas", p: 15 },
+        { n: "Assalto a Banco", p: 20 }, { n: "Porte de Arma", p: 8 },
+        { n: "Desacato", p: 5 }, { n: "Fuga", p: 7 }
+    ];
 
-    function acessoAdmin() {
-        if(localStorage.getItem('admin_pcesp') === 'ativo') {
-            navegar('admin', document.querySelector('.nav-link:last-child'));
-            return;
-        }
-        const s = prompt("CÓDIGO DE SEGURANÇA:");
-        if(s === "KaqFemboy") {
-            localStorage.setItem('admin_pcesp', 'ativo');
-            navegar('admin', document.querySelector('.nav-link:last-child'));
-        } else { alert("ACESSO BLOQUEADO!"); }
-    }
-
-    function sairAdmin() { localStorage.removeItem('admin_pcesp'); location.reload(); }
-
-    function carregarPosts() {
-        db.ref('posts').on('value', s => {
-            const anun = document.getElementById('lista-anuncios');
-            const trans = document.getElementById('lista-transparencia');
-            anun.innerHTML = ""; trans.innerHTML = "";
-            s.forEach(item => {
-                const p = item.val();
-                const html = `<div class="news-box ${p.tipo === 'transparencia' ? 'transparencia' : ''}">
-                    <span class="news-date"><i class="far fa-calendar-alt"></i> ${p.data}</span>
-                    <span class="news-title">${p.titulo}</span>
-                    <p class="news-content">${p.conteudo}</p>
-                </div>`;
-                if(p.tipo === 'anuncio') anun.insertAdjacentHTML('afterbegin', html);
-                else trans.insertAdjacentHTML('afterbegin', html);
-            });
-        });
-    }
-
-    function publicarNoticia() {
-        const tipo = document.getElementById('post-tipo').value;
-        const titulo = document.getElementById('post-titulo').value;
-        const conteudo = document.getElementById('post-conteudo').value;
-        if(!titulo || !conteudo) return alert("Preencha todos os campos.");
-
-        const data = new Date().toLocaleDateString('pt-BR') + " - " + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-        db.ref('posts').push({ tipo, titulo, conteudo, data });
-        alert("Publicado com sucesso!");
-        document.getElementById('post-titulo').value = ""; document.getElementById('post-conteudo').value = "";
-    }
-
-    function enviarRegistro() {
-        const tipo = document.getElementById('tipo-registro').value;
-        const nome = document.getElementById('reg-nome').value || "Não identificado";
-        const texto = document.getElementById('reg-texto').value;
-        if(!texto) return alert("Descreva a ocorrência.");
-
-        const titulo = tipo === 'bo' ? "🚨 NOVO BOLETIM (PCESP)" : "🕵️ DENÚNCIA 181 (SIGILO)";
-        const cor = tipo === 'bo' ? 3447003 : 15105570;
-
-        fetch(webhook, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ embeds: [{ title: titulo, description: `**Relator:** ${nome}\n**Mensagem:** ${texto}`, color: cor, footer: {text:"Intranet PCESP Brasil Legacy"} }] })
-        });
-        alert("Protocolo transmitido!");
-        location.reload();
-    }
-
-    const CRIMES = [{n:"Homicídio",p:30},{n:"Tráfico",p:15},{n:"Roubo",p:10},{n:"Arma",p:8},{n:"Desacato",p:5},{n:"Fuga",p:7}];
-    const cDiv = document.getElementById('calc-crimes');
-    CRIMES.forEach((c, i) => {
-        cDiv.innerHTML += `<div style="font-size:0.8rem; background:rgba(255,255,255,0.05); padding:8px; border-radius:5px;"><input type="checkbox" style="width:auto; margin-right:8px;" value="${i}" onchange="calc()"> ${c.n}</div>`;
+    // Carregar Lista de Crimes
+    const cDiv = document.getElementById('calc-container');
+    CRIMES_LIST.forEach((c, i) => {
+        cDiv.innerHTML += `
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                <input type="checkbox" style="width:20px; height:20px; margin:0;" value="${i}" onchange="atualizarCalc()">
+                <label style="font-size:0.9rem;">${c.n} (${c.p}m)</label>
+            </div>`;
     });
 
-    function calc() {
-        let p = 0; let l = [];
-        document.querySelectorAll('#calc-crimes input:checked').forEach(i => { p += CRIMES[i.value].p; l.push(CRIMES[i.value].n); });
-        document.getElementById('res-pena').value = `PCESP - GUIA DE RECOLHIMENTO\n--------------------------\nCRIMES: ${l.join(', ')}\nPENA FINAL: ${p} Meses\n--------------------------`;
+    // Funções de Navegação
+    function navegar(aba, el) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('aba-' + aba).classList.remove('hidden');
+        if(el) el.classList.add('active');
     }
 
-    function copiarPena() { const t = document.getElementById('res-pena'); t.select(); document.execCommand('copy'); alert("Copiado!"); }
+    function acessoRestrito() {
+        const pass = prompt("SENHA DE ADMIN:");
+        if(pass === "KaqFemboy") navegar('restrito', document.querySelector('.nav-link:last-child'));
+        else alert("Acesso Negado.");
+    }
 
-    window.onload = carregarPosts;
+    // Gerenciamento de Postagens (Firebase)
+    function salvarPost() {
+        const tipo = document.getElementById('post-tipo').value;
+        const autor = document.getElementById('post-autor').value;
+        const texto = document.getElementById('post-texto').value;
+        const data = new Date().toLocaleString('pt-BR');
+
+        if(!autor || !texto) return alert("Preencha todos os campos.");
+
+        db.ref('postagens').push({ tipo, autor, texto, data }).then(() => {
+            alert("Postagem realizada!");
+            document.getElementById('post-texto').value = "";
+        });
+    }
+
+    // Carregamento de Posts em Tempo Real
+    db.ref('postagens').on('value', snapshot => {
+        const feedAnuncios = document.getElementById('feed-anuncios');
+        const feedTransp = document.getElementById('feed-transparencia');
+        feedAnuncios.innerHTML = ""; feedTransp.innerHTML = "";
+
+        snapshot.forEach(item => {
+            const val = item.val();
+            const html = `
+                <div class="post-item">
+                    <div class="post-meta">${val.data} | Por: ${val.autor}</div>
+                    <div class="post-content">${val.texto}</div>
+                </div>`;
+            
+            if(val.tipo === 'anuncio') feedAnuncios.insertAdjacentHTML('afterbegin', html);
+            else feedTransp.insertAdjacentHTML('afterbegin', html);
+        });
+    });
+
+    function enviarBO() {
+        const nome = document.getElementById('bo-nome').value;
+        const relato = document.getElementById('bo-relato').value;
+        if(!nome || !relato) return alert("Preencha tudo.");
+        enviarDiscord("👮 NOVO B.O.", `**Envolvido:** ${nome}\n**Relato:** ${relato}`, 3447003);
+        alert("Enviado!");
+    }
+
+    function enviarDenuncia() {
+        const local = document.getElementById('den-local').value;
+        const relato = document.getElementById('den-relato').value;
+        if(!local || !relato) return alert("Preencha tudo.");
+        enviarDiscord("🕵️ DENÚNCIA", `**Local:** ${local}\n**Relato:** ${relato}`, 15105570);
+        alert("Enviado!");
+    }
+
+    function atualizarCalc() {
+        let penaTotal = 0; let selecionados = [];
+        document.querySelectorAll('#calc-container input:checked').forEach(input => {
+            const crime = CRIMES_LIST[input.value];
+            penaTotal += crime.p; selecionados.push(crime.n);
+        });
+        document.getElementById('txt-calculado').value = `PCESP - RELATÓRIO\nCRIMES: ${selecionados.join(', ')}\nPENA: ${penaTotal} meses`;
+    }
+
+    function copiarPena() {
+        const t = document.getElementById('txt-calculado');
+        t.select(); document.execCommand('copy'); alert("Copiado!");
+    }
+
+    async function enviarDiscord(titulo, msg, cor) {
+        await fetch(webhookURL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ embeds: [{ title: titulo, description: msg, color: cor }] })
+        });
+    }
 </script>
 
 </body>
