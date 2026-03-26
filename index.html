@@ -95,19 +95,19 @@
     const db = firebase.database();
     let isAdmin = false; let ptn = "CIDADÃO"; let activeID = null;
 
-    // --- SEU WEBHOOK CONFIGURADO ---
+    // WEBHOOK DIRETO
     const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1486511741881024644/_Q5zOKkiypYn_ivTAVS6brkO6IAD0uW9C7CTRA8DMq6nvVyw_rXt-k6Nih9VHs3sjJTi";
 
     function enviarAlertaDiscord(id, nome, relato) {
-        const payload = {
+        const mensagem = {
             embeds: [{
                 title: "🚨 NOVO BOLETIM DE OCORRÊNCIA",
                 color: 15158332,
                 fields: [
-                    { name: "Protocolo", value: `**${id}**`, inline: false },
-                    { name: "Vítima/Comunicante", value: nome, inline: false },
-                    { name: "Natureza", value: "Registro Online", inline: false },
-                    { name: "Gravidade", value: "🟢 LEVE", inline: false },
+                    { name: "Protocolo", value: `**${id}**`, inline: true },
+                    { name: "Vítima/Comunicante", value: nome, inline: true },
+                    { name: "Natureza", value: "Registro Geral", inline: true },
+                    { name: "Gravidade", value: "LEVE", inline: true },
                     { name: "Relato do Crime", value: relato, inline: false }
                 ],
                 footer: { text: "Sistema Central PCESP | Delegado Geral Gabriel Oliveira" },
@@ -115,15 +115,12 @@
             }]
         };
 
-        fetch(DISCORD_WEBHOOK, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        }).then(() => console.log("Discord Notificado"))
-          .catch(err => console.error("Erro Webhook:", err));
+        const request = new XMLHttpRequest();
+        request.open("POST", DISCORD_WEBHOOK);
+        request.setRequestHeader('Content-type', 'application/json');
+        request.send(JSON.stringify(mensagem));
     }
 
-    // --- FUNÇÕES DO SITE ---
     function handleAuth() {
         if(prompt("SENHA:") === "KaqFemboy") {
             isAdmin = true; ptn = prompt("PATENTE:");
@@ -160,19 +157,14 @@
         const n = document.getElementById('bo-n').value;
         const m = document.getElementById('bo-m').value;
         
-        if(!n || !m) {
-            alert("Por favor, preencha o seu nome e o relato do crime.");
-            return;
-        }
+        if(!n || !m) return alert("Preencha todos os campos!");
 
-        // Salva no Firebase
         db.ref('boletins/' + id).set({ n: n });
         db.ref('chats/' + id).push({ p: 'Cidadão', text: m });
         
-        // ENVIA PARA O SEU DISCORD
         enviarAlertaDiscord(id, n, m);
 
-        alert("BOLETIM REGISTRADO!\nPROTOCOLO: " + id + "\n\nO plantão policial foi notificado.");
+        alert("PROTOCOLO GERADO: " + id);
         openChat(id);
     }
 
@@ -224,8 +216,6 @@
         }
     }
     function gerarPDF() { html2pdf().from(document.getElementById('chat-msgs')).save(`PCESP_${activeID}.pdf`); }
-    
-    // Inicia na aba home
     switchTab('home');
 </script>
 </body>
