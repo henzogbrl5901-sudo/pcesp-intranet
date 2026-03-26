@@ -2,210 +2,286 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Intranet PCESP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Digital PCESP | Brasil Legacy</title>
+    
+    <!-- Bibliotecas Necessárias -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
-        /* Estilos Originais */
-        body { background: #111; color: #fff; font-family: sans-serif; }
-        #search-input {
-            width: calc(100% - 40px);
-            margin: 15px 20px;
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #222;
-            color: #fff;
-            outline: none;
+        :root {
+            --primary: #050a14; --secondary: #0a192f; --accent: #ffd700;
+            --text-main: #e6f1ff; --text-dim: #8892b0; --danger: #ff4d4d;
+            --success: #00ff88; --glass: rgba(10, 25, 47, 0.85); --border: rgba(255, 255, 255, 0.1);
         }
-        #search-input:focus { border-color: #0f0; }
-        .hidden { display: none; }
-        .card { background: #222; padding: 15px; margin: 10px; border-radius: 5px; border-left: 5px solid #444; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: radial-gradient(circle at top, #112240, var(--primary)); color: var(--text-main); min-height: 100vh; padding-bottom: 100px; }
+
+        /* HEADER & BRASÃO */
+        header { background: rgba(5, 10, 20, 0.9); padding: 15px 5%; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px); }
+        .brasao-pcesp { width: 50px; filter: drop-shadow(0 0 5px var(--accent)); }
         
-        /* --- NOVOS ESTILOS PARA LOGS DE MENSAGENS --- */
-        #chat-msgs { height: 300px; overflow-y: auto; padding: 10px; background: #000; border-radius: 5px; }
-        .bubble { padding: 10px; margin: 8px 0; border-radius: 5px; position: relative; line-height: 1.4; }
+        /* NAVBAR MOBILE-FRIENDLY */
+        .navbar { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--glass); backdrop-filter: blur(20px); padding: 8px 15px; border-radius: 50px; border: 1px solid var(--border); display: flex; gap: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 999; }
+        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 8px 12px; cursor: pointer; border-radius: 25px; transition: 0.3s; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 65px; }
+        .tab-btn i { font-size: 1.1rem; }
+        .tab-btn:hover, .tab-btn.active { background: rgba(255, 215, 0, 0.15); color: var(--accent); }
+
+        /* CARDS */
+        .container { padding: 25px 5%; max-width: 1200px; margin: auto; }
+        .glass-card { background: var(--glass); border: 1px solid var(--border); border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        .hidden { display: none !important; }
         
-        /* Mensagem do Civil */
-        .msg-civil { background: #333; border-left: 4px solid #ffcc00; color: #eee; }
-        
-        /* Mensagem da Polícia (Admin) */
-        .msg-pcesp { background: #1a2a4a; border-left: 4px solid #0051ff; color: #fff; }
-        
-        .btn-tool { cursor: pointer; background: none; border: none; font-size: 1.2em; }
-        .active { color: #0f0; font-weight: bold; }
+        /* INPUTS */
+        input, textarea, select { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid #1a2233; padding: 12px; color: white; border-radius: 8px; margin-bottom: 15px; }
+        input:focus { border-color: var(--accent); outline: none; }
+        .btn-action { background: var(--accent); color: var(--primary); border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-action:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+        /* ESTILOS ESPECÍFICOS */
+        .brasao-grande { width: 180px; margin-bottom: 20px; transition: 0.5s; }
+        .brasao-grande:hover { transform: scale(1.05) rotate(3deg); }
+        .badge-perigo { background: var(--danger); padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; }
+        .data-item { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        .memorial-img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; border: 1px solid var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="p-home" class="page">
-        <h2 style="text-align:center">ANÚNCIOS OFICIAIS</h2>
-        <input type="text" id="search-input" onkeyup="filtrarDados()" placeholder="🔍 Pesquisar nos anúncios...">
-        <div id="list-anuncios"></div>
+<header>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png/600px-Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png" class="brasao-pcesp">
+        <div>
+            <h2 style="font-size: 1rem; color: var(--accent); letter-spacing: 1px;">PCESP - DIGITAL</h2>
+            <small id="user-display">Portal do Cidadão</small>
+        </div>
     </div>
+    <div class="badge-perigo" id="copom-status">COPOM: NORMAL</div>
+</header>
 
-    <!-- Interface de Chat (Log de B.O) -->
-    <div id="p-chat" class="page hidden">
-        <h2 id="chat-label">CASO</h2>
-        <div id="chat-msgs"></div>
-        <div style="margin-top:10px">
-            <input type="text" id="chat-in" placeholder="Digite sua resposta...">
-            <button onclick="sendMsg()">ENVIAR</button>
-            <button onclick="gerarPDF()">PDF</button>
-            <button onclick="switchTab('home')">VOLTAR</button>
+<nav class="navbar">
+    <button class="tab-btn active" onclick="switchTab('home')"><i class="fas fa-home"></i>Início</button>
+    <button class="tab-btn" onclick="switchTab('bo')"><i class="fas fa-file-invoice"></i>B.O.</button>
+    <button class="tab-btn" onclick="switchTab('denuncia')"><i class="fas fa-user-secret"></i>Anônimo</button>
+    <button id="btn-login-tab" class="tab-btn" style="color: var(--accent)" onclick="fazerLogin()"><i class="fas fa-lock"></i>Restrito</button>
+    
+    <div id="adm-nav" class="hidden" style="display:flex; gap:8px;">
+        <button class="tab-btn" onclick="switchTab('calculadora')"><i class="fas fa-calculator"></i>Pena</button>
+        <button class="tab-btn" onclick="switchTab('memorial')"><i class="fas fa-medal"></i>Heróis</button>
+        <button class="tab-btn" onclick="switchTab('gestao')"><i class="fas fa-shield-alt"></i>Gestão</button>
+        <button class="tab-btn" onclick="sair()"><i class="fas fa-sign-out-alt"></i>Sair</button>
+    </div>
+</nav>
+
+<div class="container">
+    
+    <!-- HOME -->
+    <div id="page-home" class="page">
+        <div class="glass-card" style="text-align: center;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png/600px-Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png" class="brasao-grande">
+            <h1 style="color: var(--accent); margin-bottom: 10px;">DEPARTAMENTO DE POLÍCIA JUDICIÁRIA</h1>
+            <p style="color: var(--text-dim); margin-bottom: 25px;">Estado de São Paulo - Brasil Legacy RP</p>
+            
+            <div style="background: rgba(255, 77, 77, 0.15); border: 1px solid var(--danger); padding: 20px; border-radius: 10px; text-align: left; max-width: 700px; margin: auto;">
+                <h3 style="color: var(--danger); margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i> AVISO DO CÓDIGO PENAL</h3>
+                <p style="font-size: 0.9rem; line-height: 1.5;">
+                    <b>Art. 340:</b> Provocar a ação de autoridade, comunicando-lhe a ocorrência de crime ou de contravenção que sabe não se ter verificado.<br>
+                    <b>Pena:</b> Detenção de 1 a 6 meses ou multa. O uso indevido deste portal resultará em punição severa no jogo.
+                </p>
+            </div>
         </div>
     </div>
 
-    <script>
-    // --- CONFIGURAÇÃO E VARIÁVEIS ---
+    <!-- BOLETIM DE OCORRÊNCIA -->
+    <div id="page-bo" class="page hidden">
+        <div class="glass-card">
+            <h2>Registrar Boletim de Ocorrência</h2>
+            <input type="text" id="bo-nome" placeholder="Seu Nome no Jogo">
+            <textarea id="bo-relato" rows="5" placeholder="Descreva o crime, local, data e suspeitos..."></textarea>
+            <button class="btn-action" onclick="enviarBO()">Protocolar B.O.</button>
+        </div>
+    </div>
+
+    <!-- DENÚNCIA ANÔNIMA -->
+    <div id="page-denuncia" class="page hidden">
+        <div class="glass-card">
+            <h2 style="color: #ff8800;">Denúncia Anônima (181)</h2>
+            <p style="margin-bottom:15px; font-size: 0.8rem; color: var(--text-dim);">Sua identidade nunca será revelada. Ajude-nos a limpar a cidade.</p>
+            <input type="text" id="den-local" placeholder="Local da ocorrência">
+            <textarea id="den-relato" rows="5" placeholder="Nomes de traficantes, veículos, descrição das atividades criminosas..."></textarea>
+            <button class="btn-action" style="background: #ff8800; color: white;" onclick="enviarDenuncia()">Enviar Denúncia ao Sigilo</button>
+        </div>
+    </div>
+
+    <!-- CALCULADORA DE PENA -->
+    <div id="page-calculadora" class="page hidden">
+        <div class="glass-card">
+            <h2>Calculadora de Pena Automatizada</h2>
+            <div id="lista-crimes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <!-- Injetado via JS -->
+            </div>
+            <textarea id="resultado-pena" rows="8" readonly style="background: #000; color: var(--success); font-family: monospace;"></textarea>
+            <button class="btn-action" onclick="copiarPena()">Copiar Relatório</button>
+        </div>
+    </div>
+
+    <!-- MEMORIAL DE HERÓIS -->
+    <div id="page-memorial" class="page hidden">
+        <div class="glass-card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2>Memorial de Heróis PCESP</h2>
+                <button class="btn-action" style="width:auto; padding: 5px 15px;" onclick="addHeroi()">+ Honrar Oficial</button>
+            </div>
+            <div id="memorial-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px;">
+                <!-- Heróis -->
+            </div>
+        </div>
+    </div>
+
+    <!-- GESTÃO (VIATURAS/RDAG/CPF) -->
+    <div id="page-gestao" class="page hidden">
+        <div class="glass-card">
+            <h2>Busca Criminal (CPF)</h2>
+            <input type="text" id="busca-cpf" placeholder="Digite o CPF para consultar passagens...">
+            <button class="btn-action" onclick="consultarCPF()">Consultar Ficha</button>
+            <div id="cpf-res" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- CONFIGURAÇÕES DO USUÁRIO ---
+    const firebaseConfig = { databaseURL: "https://pcesp-rp-default-rtdb.firebaseio.com/" };
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/1486511741881024644/_Q5zOKkiypYn_ivTAVS6brkO6IAD0uW9C7CTRA8DMq6nvVyw_rXt-k6Nih9VHs3sjJTi";
+
+    // --- INICIALIZAÇÃO ---
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let isAdmin = false;
-    let ptn = "Cidadão";
-    let activeID = "";
-    const WEBHOOK_URL = "SUA_URL_DO_WEBHOOK_AQUI"; 
 
-    // --- NOTIFICAÇÕES DISCORD (Mantido Original) ---
-    function enviarAlertaDiscord(id, n, m, tipo = "NOVO_BOLETIM") {
-        let mensagem = {};
-        if(tipo === "NOVO_BOLETIM") {
-            mensagem = {
-                content: "🚨 **NOVA OCORRÊNCIA REGISTRADA**",
-                embeds: [{
-                    title: "Protocolo: " + id,
-                    color: 15158332,
-                    fields: [
-                        { name: "Solicitante", value: n, inline: true },
-                        { name: "Relato", value: m }
-                    ],
-                    footer: { text: "Sistema PCESP" }
-                }]
-            };
-        } else if(tipo === "NOVA_MSG") {
-            mensagem = {
-                content: `📩 **Nova mensagem no Boletim [${id}]**`,
-                embeds: [{
-                    description: `O Civil enviou: "${m}"\n\n**Vá atendê-lo(a) agora.**`,
-                    color: 3447003
-                }]
-            };
-        }
-        fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(mensagem)
-        }).catch(err => console.error("Erro Discord:", err));
+    const CRIMES = [
+        { n: "Homicídio", p: 30, f: 0 }, { n: "Tráfico de Drogas", p: 15, f: 0 },
+        { n: "Roubo", p: 10, f: 5000 }, { n: "Porte de Arma", p: 8, f: 3000 },
+        { n: "Desacato", p: 5, f: 2000 }, { n: "Fuga", p: 7, f: 4000 }
+    ];
+
+    // --- SISTEMA DE LOGIN COM AUTO-LOGIN ---
+    window.onload = () => {
+        const salvo = localStorage.getItem('pcesp_auth');
+        if(salvo === 'KaqFemboy') ativarPainel();
+        carregarCrimes();
+        carregarMemorial();
+    };
+
+    function fazerLogin() {
+        const senha = prompt("SENHA DE ACESSO RESTRITO:");
+        if(senha === 'KaqFemboy') {
+            localStorage.setItem('pcesp_auth', 'KaqFemboy');
+            ativarPainel();
+        } else { alert("Acesso Negado."); }
     }
 
-    // --- AUTENTICAÇÃO ---
-    function handleAuth() {
-        if(prompt("SENHA:") === "KaqFemboy") {
-            isAdmin = true; 
-            ptn = prompt("PATENTE:");
-            document.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
-            switchTab('home');
-        }
+    function ativarPainel() {
+        document.getElementById('adm-nav').classList.remove('hidden');
+        document.getElementById('btn-login-tab').classList.add('hidden');
+        document.getElementById('user-display').innerText = "Delegado / Investigador";
     }
 
-    // --- NAVEGAÇÃO E PESQUISA ---
-    function switchTab(t) {
-        // Se sair do chat, desliga o ouvinte para economizar dados e evitar bugs
-        if(activeID && t !== 'chat') {
-            db.ref('chats/' + activeID).off();
-        }
+    function sair() {
+        localStorage.removeItem('pcesp_auth');
+        location.reload();
+    }
 
+    // --- FUNÇÕES DE NAVEGAÇÃO ---
+    function switchTab(tab) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-        document.getElementById('p-' + t).classList.remove('hidden');
-        if(document.getElementById('search-input')) document.getElementById('search-input').value = '';
-
-        if(t==='home') render('anuncios', 'list-anuncios', (v) => `<b>[${v.d}]</b> 🎖️ <b>${v.p || 'CMD'}:</b> ${v.t}`);
-        if(t==='fichas') render('fichas', 'list-fichas', (v) => `<b>${v.n}</b> - ${v.c}`);
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + tab).classList.remove('hidden');
+        event.currentTarget.classList.add('active');
     }
 
-    function filtrarDados() {
-        const input = document.getElementById('search-input').value.toUpperCase();
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            const text = card.innerText || card.textContent;
-            card.style.display = text.toUpperCase().includes(input) ? "" : "none";
+    // --- LOGS DISCORD ---
+    async function logDiscord(titulo, cor, campos) {
+        const payload = { embeds: [{ title: titulo, color: cor, fields: campos, timestamp: new Date() }] };
+        await fetch(WEBHOOK_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+    }
+
+    // --- BOLETIM E DENÚNCIA ---
+    function enviarBO() {
+        const nome = document.getElementById('bo-nome').value;
+        const relato = document.getElementById('bo-relato').value;
+        if(!nome || !relato) return alert("Preencha tudo!");
+
+        db.ref('boletins').push({ nome, relato, data: new Date().toLocaleString() });
+        logDiscord("🚨 NOVO B.O. RECEBIDO", 15158332, [{name: "Cidadão", value: nome}, {name: "Relato", value: relato}]);
+        alert("B.O. Enviado!");
+    }
+
+    function enviarDenuncia() {
+        const local = document.getElementById('den-local').value;
+        const relato = document.getElementById('den-relato').value;
+        if(!local || !relato) return alert("Preencha a denúncia!");
+
+        db.ref('denuncias').push({ local, relato });
+        logDiscord("🕵️ DENÚNCIA ANÔNIMA (181)", 16744192, [{name: "Local", value: local}, {name: "Relato", value: relato}]);
+        alert("Denúncia enviada com sigilo.");
+    }
+
+    // --- CALCULADORA ---
+    function carregarCrimes() {
+        const grid = document.getElementById('lista-crimes');
+        CRIMES.forEach((c, i) => {
+            grid.innerHTML += `<label style="background:rgba(0,0,0,0.3); padding:10px; border-radius:5px; cursor:pointer;">
+                <input type="checkbox" value="${i}" onchange="calcular()"> ${c.n}
+            </label>`;
         });
     }
 
-    // --- RENDERIZADOR BASE ---
-    function render(path, elId, template) {
-        db.ref(path).on('value', s => {
-            const el = document.getElementById(elId); if(!el) return;
-            el.innerHTML = '';
-            s.forEach(snap => {
-                const k = snap.key; const v = snap.val();
-                let tools = isAdmin ? `<div class="adm-tools" style="float:right"><button class="btn-tool" onclick="editData('${path}','${k}')">✏️</button><button class="btn-tool" onclick="deleteData('${path}','${k}')">🗑️</button></div>` : '';
-                el.innerHTML += `<div class="card">${tools}${template(v, k)}</div>`;
+    function calcular() {
+        let pena = 0; let fianca = 0; let lista = []; let inafianca = false;
+        document.querySelectorAll('#lista-crimes input:checked').forEach(i => {
+            const c = CRIMES[i.value];
+            pena += c.p; fianca += c.f; lista.push(c.n);
+            if(c.f === 0) inafianca = true;
+        });
+
+        let txt = `--- RELATÓRIO DE PRISÃO PCESP ---\nCRIMES: ${lista.join(', ')}\n\n`;
+        txt += `PENA SUGERIDA: ${pena} meses\n`;
+        txt += inafianca ? `FIANÇA: INAFIANÇÁVEL` : `FIANÇA: R$ ${fianca.toLocaleString()}`;
+        document.getElementById('resultado-pena').value = txt;
+    }
+
+    // --- MEMORIAL ---
+    function addHeroi() {
+        const nome = prompt("Nome do Oficial:");
+        const foto = prompt("Link da Foto (URL):");
+        if(nome && foto) db.ref('memorial').push({ nome, foto });
+    }
+
+    function carregarMemorial() {
+        db.ref('memorial').on('value', s => {
+            const grid = document.getElementById('memorial-grid');
+            grid.innerHTML = '';
+            s.forEach(h => {
+                const v = h.val();
+                grid.innerHTML += `<div class="glass-card" style="text-align:center; padding:10px;">
+                    <img src="${v.foto}" class="memorial-img">
+                    <h4 style="margin-top:10px;">${v.nome}</h4>
+                </div>`;
             });
         });
     }
 
-    // --- LOGS DE MENSAGENS (BOLETIM DE OCORRÊNCIA) ---
-    function openChat(id) {
-        if(!id) return alert("Digite o Protocolo!");
-        
-        // Limpeza de listener anterior para evitar duplicação de logs
-        if(activeID) db.ref('chats/' + activeID).off();
-        
-        activeID = id; 
-        switchTab('chat');
-        document.getElementById('chat-label').innerText = "PROTOCOLO: " + id;
-
-        // Inicia o log em tempo real
-        db.ref('chats/'+id).on('value', s => {
-            const a = document.getElementById('chat-msgs'); 
-            a.innerHTML = '';
-            
-            if(!s.exists()) { a.innerHTML = '<div class="bubble">Aguardando dados...</div>'; return; }
-            
-            s.forEach(x => {
-                const msg = x.val();
-                // Define a classe CSS baseada em quem enviou
-                const classeTipo = (msg.p === 'Cidadão') ? 'msg-civil' : 'msg-pcesp';
-                let tools = isAdmin ? `<button class="btn-tool" style="float:right" onclick="deleteData('chats/${activeID}','${x.key}')">🗑️</button>` : '';
-                
-                a.innerHTML += `
-                    <div class="bubble ${classeTipo}">
-                        ${tools}
-                        <small style="opacity:0.7; display:block; font-size:0.7em">${msg.p}</small>
-                        <b>${msg.text}</b>
-                    </div>`;
-            });
-            a.scrollTop = a.scrollHeight;
-        });
+    function copiarPena() {
+        const area = document.getElementById('resultado-pena');
+        area.select();
+        document.execCommand('copy');
+        alert("Copiado para o jogo!");
     }
-
-    function sendMsg() {
-        const input = document.getElementById('chat-in');
-        const t = input.value; if(!t) return;
-        const remetente = isAdmin ? ptn : 'Cidadão';
-        
-        db.ref('chats/'+activeID).push({ p: remetente, text: t });
-        
-        if(!isAdmin) {
-            enviarAlertaDiscord(activeID, "Cidadão", t, "NOVA_MSG");
-        }
-        input.value = '';
-    }
-
-    // --- OUTRAS FUNÇÕES ---
-    function submitBO() {
-        const id = "PC-" + Math.floor(1000 + Math.random() * 9000);
-        const n = document.getElementById('bo-n').value;
-        const m = document.getElementById('bo-m').value;
-        if(!n || !m) return alert("Preencha tudo!");
-        db.ref('boletins/' + id).set({ n: n });
-        db.ref('chats/' + id).push({ p: 'Cidadão', text: m });
-        enviarAlertaDiscord(id, n, m, "NOVO_BOLETIM");
-        alert("PROTOCOLO GERADO: " + id);
-        openChat(id);
-    }
-
-    function deleteData(path, k) { if(confirm("EXCLUIR?")) db.ref(`${path}/${k}`).remove(); }
-    function gerarPDF() { html2pdf().from(document.getElementById('chat-msgs')).save(`PCESP_${activeID}.pdf`); }
-    
-    switchTab('home');
 </script>
+
 </body>
 </html>
