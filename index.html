@@ -15,6 +15,7 @@
             --pcesp-dark: #02060c;
             --glass: rgba(255, 255, 255, 0.05);
             --danger: #ff4747;
+            --success: #2ecc71;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -25,22 +26,31 @@
             color: #e6f1ff; 
             font-family: 'Segoe UI', sans-serif;
             min-height: 100vh;
-            padding-bottom: 80px;
+            padding-bottom: 90px;
         }
 
         header {
             background: rgba(0, 0, 0, 0.9);
-            padding: 20px;
+            padding: 15px;
             text-align: center;
             border-bottom: 2px solid var(--pcesp-gold);
+            position: sticky; top: 0; z-index: 1000;
         }
 
         .header-title { 
-            font-size: 1.2rem; 
+            font-size: 1.1rem; 
             font-weight: 800; 
             letter-spacing: 2px; 
             text-transform: uppercase;
             color: var(--pcesp-gold);
+        }
+
+        .status-bar {
+            background: rgba(0,0,0,0.5);
+            font-size: 0.65rem;
+            padding: 5px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,215,0,0.2);
         }
 
         .app-container { padding: 15px; max-width: 600px; margin: 0 auto; }
@@ -51,6 +61,7 @@
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 15px;
+            backdrop-filter: blur(5px);
         }
 
         h2 { 
@@ -68,10 +79,10 @@
             background: rgba(0,0,0,0.6);
             border: 1px solid #1a2233;
             color: #fff;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 1rem;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
         }
 
         .btn-operacional {
@@ -79,10 +90,22 @@
             color: #000;
             border: none;
             width: 100%;
-            padding: 18px;
+            padding: 15px;
             font-weight: 900;
             border-radius: 8px;
             text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        /* GRID TÁTICO */
+        .grid-docs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .doc-item { 
+            background: rgba(255,255,255,0.05); 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-size: 0.75rem;
+            border: 1px solid rgba(255,215,0,0.1);
             cursor: pointer;
         }
 
@@ -101,11 +124,11 @@
             color: #4b5d67;
             text-decoration: none;
             text-align: center;
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             flex: 1;
         }
 
-        .nav-link i { font-size: 1.3rem; display: block; margin-bottom: 3px; }
+        .nav-link i { font-size: 1.2rem; display: block; margin-bottom: 3px; }
         .nav-link.active { color: var(--pcesp-gold); }
 
         .post-item {
@@ -116,84 +139,163 @@
             border-left: 3px solid var(--pcesp-gold);
         }
         .post-meta { font-size: 0.65rem; color: var(--pcesp-gold); margin-bottom: 4px; }
-        .post-content { font-size: 0.85rem; color: #ccc; }
+        
+        #chat-radio {
+            height: 150px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.4);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            border: 1px solid #1a2233;
+        }
 
         .hidden { display: none !important; }
+        .badge { background: var(--pcesp-gold); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.6rem; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-title">PCESP | OPERACIONAL</div>
+    <div class="header-title">PCESP | INTRANET TÁTICA</div>
 </header>
+<div class="status-bar" id="server-status">SISTEMA ONLINE | CONDIÇÃO: VERDE (NORMALIDADE)</div>
 
 <div class="app-container">
     
-    <!-- ABA: ANÚNCIOS -->
     <div id="aba-home" class="page-content">
         <div class="card">
             <h2><i class="fas fa-bullhorn"></i> Ordens do Dia</h2>
             <div id="feed-anuncios"></div>
         </div>
+        <div class="card">
+            <h2><i class="fas fa-medal"></i> Quadro de Medalhas</h2>
+            <div id="lista-medalhas" style="font-size: 0.8rem;">
+                <p>🥇 <b>Kaq:</b> Honra ao Mérito Operacional</p>
+            </div>
+        </div>
     </div>
 
-    <!-- ABA: TRANSPARÊNCIA -->
     <div id="aba-transparencia" class="page-content hidden">
         <div class="card">
             <h2><i class="fas fa-file-invoice"></i> Diário Oficial</h2>
             <div id="feed-transparencia"></div>
         </div>
+        <div class="card">
+            <h2><i class="fas fa-calendar-alt"></i> Escala de Plantão</h2>
+            <div id="escala-plantao" style="font-size: 0.75rem; color: #ccc;">
+                </div>
+        </div>
     </div>
 
-    <!-- ABA: B.O -->
     <div id="aba-bo" class="page-content hidden">
+        <div class="card">
+            <h2><i class="fas fa-headset"></i> Rádio QAP Interno</h2>
+            <div id="chat-radio"></div>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="radio-msg" placeholder="Mensagem rápida...">
+                <button onclick="enviarRadio()" style="background:var(--pcesp-gold); border:none; padding:10px; border-radius:8px; width:60px;"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-search"></i> Consulta Tática</h2>
+            <input type="text" id="cons-placa" placeholder="Consultar Placa (ABC-1234)">
+            <button class="btn-operacional" style="background:#2c3e50; color:#fff;" onclick="consultarPlaca()">Verificar Sistema</button>
+        </div>
+
         <div class="card">
             <h2><i class="fas fa-edit"></i> Boletim de Ocorrência</h2>
             <input type="text" id="bo-nome" placeholder="Nome do Envolvido">
-            <textarea id="bo-relato" rows="5" placeholder="Relato dos fatos..."></textarea>
-            <button class="btn-operacional" onclick="enviarBO()">Protocolar</button>
+            <textarea id="bo-relato" rows="4" placeholder="Relato dos fatos..."></textarea>
+            <textarea id="bo-apreensao" rows="2" placeholder="Itens apreendidos (Armas/Drogas)..."></textarea>
+            <button class="btn-operacional" onclick="enviarBO()">Protocolar e Logar</button>
         </div>
     </div>
 
-    <!-- ABA: DENÚNCIA -->
+    <div id="aba-docs" class="page-content hidden">
+        <div class="card">
+            <h2><i class="fas fa-book"></i> Vade Mecum / Leis</h2>
+            <div class="grid-docs">
+                <div class="doc-item" onclick="alert('Art. 121: Homicídio - 30 meses')">Cód. Penal</div>
+                <div class="doc-item" onclick="alert('Art. 33: Tráfico - 15 meses')">Lei Drogas</div>
+                <div class="doc-item" onclick="alert('Art. 330: Desacato - 5 meses')">Desobediência</div>
+                <div class="doc-item" onclick="alert('Abordagem: Verbalize > Revista > Algema')">Protocolo</div>
+            </div>
+        </div>
+        <div class="card">
+            <h2><i class="fas fa-copy"></i> Modelos / Termos</h2>
+            <button class="btn-operacional" style="font-size:0.7rem; padding:10px; margin-bottom:5px;" onclick="copiarModelo('oficio')">Copiar Modelo de Ofício</button>
+            <button class="btn-operacional" style="font-size:0.7rem; padding:10px;" onclick="copiarModelo('termo')">Copiar Termo de Apreensão</button>
+        </div>
+        <div class="card">
+            <h2><i class="fas fa-user-lock"></i> Mandados Ativos</h2>
+            <div id="feed-mandados" style="font-size: 0.8rem; color: var(--danger);">
+                ⚠️ Nenhum mandado de prisão em aberto.
+            </div>
+        </div>
+    </div>
+
     <div id="aba-denuncia" class="page-content hidden">
         <div class="card">
-            <h2 style="color: #ff4747;"><i class="fas fa-user-secret"></i> DENÚNCIA ANÔNIMA (181)</h2>
-            <p style="font-size: 0.7rem; color: #888; margin-bottom: 10px;">O sigilo é absoluto. Suas informações serão enviadas diretamente à inteligência.</p>
-            <input type="text" id="den-local" placeholder="Local do Ocorrido">
-            <textarea id="den-relato" rows="5" placeholder="Descreva suspeitos, veículos ou crimes..."></textarea>
-            <button class="btn-operacional" style="background: #ff4747; color: #fff;" onclick="enviarDenuncia()">Enviar Anonimamente</button>
+            <h2 style="color: #ff4747;"><i class="fas fa-user-secret"></i> DENÚNCIA 181 / CORREGEDORIA</h2>
+            <select id="den-tipo">
+                <option value="crime">Denunciar Crime (Anônimo)</option>
+                <option value="abuso">Corregedoria (Abuso de Autoridade)</option>
+            </select>
+            <input type="text" id="den-local" placeholder="Local ou Nome do Policial">
+            <textarea id="den-relato" rows="5" placeholder="Descreva os fatos com detalhes..."></textarea>
+            <button class="btn-operacional" style="background: #ff4747; color: #fff;" onclick="enviarDenuncia()">Transmitir Sigilo</button>
+        </div>
+        <div class="card">
+            <h2><i class="fas fa-id-card"></i> Solicitar Licença</h2>
+            <input type="text" id="lic-nome" placeholder="Seu Nome e Patente">
+            <input type="text" id="lic-dias" placeholder="Período (Ex: 25/10 a 30/10)">
+            <button class="btn-operacional" style="background:#2ecc71;" onclick="enviarLicenca()">Enviar para RH</button>
         </div>
     </div>
 
-    <!-- ABA: RESTRITO (ADMIN) -->
     <div id="aba-restrito" class="page-content hidden">
-        <div class="card">
-            <h2><i class="fas fa-plus-circle"></i> Nova Publicação</h2>
+        <div class="card" style="border-color: var(--pcesp-gold)">
+            <h2><i class="fas fa-shield-alt"></i> Controle Master</h2>
             <select id="post-tipo">
                 <option value="anuncio">Anúncio</option>
-                <option value="transparencia">Transparência</option>
+                <option value="transparencia">Transparência/Escala</option>
+                <option value="mandado">Novo Mandado</option>
             </select>
-            <input type="text" id="post-autor" placeholder="Seu Nome/Cargo">
+            <select id="status-set">
+                <option value="VERDE (NORMALIDADE)">Status: VERDE</option>
+                <option value="AMARELO (ALERTA)">Status: AMARELO</option>
+                <option value="VERMELHO (CONFRONTO)">Status: VERMELHO</option>
+            </select>
+            <input type="text" id="post-autor" placeholder="Patente / Nome">
             <textarea id="post-texto" rows="3" placeholder="Mensagem..."></textarea>
-            <button class="btn-operacional" onclick="salvarPost()">Publicar</button>
+            <button class="btn-operacional" onclick="salvarPost()">Publicar no Sistema</button>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-history"></i> Logs do Sistema</h2>
+            <div id="admin-logs" style="font-size: 0.6rem; max-height: 100px; overflow: auto; background: #000; padding: 5px;"></div>
         </div>
 
         <div class="card">
             <h2><i class="fas fa-calculator"></i> Calculadora</h2>
-            <div id="calc-container"></div>
-            <textarea id="txt-calculado" rows="4" readonly style="background:#000; color:var(--pcesp-gold); font-family:monospace; margin-top:10px;"></textarea>
-            <button class="btn-operacional" onclick="copiarPena()">Copiar Relatório</button>
+            <div id="calc-container" style="max-height: 150px; overflow-y: auto;"></div>
+            <textarea id="txt-calculado" rows="4" readonly style="background:#000; color:var(--pcesp-gold); font-family:monospace; margin-top:10px; font-size: 0.7rem;"></textarea>
+            <button class="btn-operacional" onclick="copiarPena()">Copiar Guia</button>
         </div>
     </div>
 </div>
 
 <nav>
-    <a href="#" class="nav-link active" onclick="navegar('home', this)"><i class="fas fa-newspaper"></i>Avisos</a>
-    <a href="#" class="nav-link" onclick="navegar('transparencia', this)"><i class="fas fa-search"></i>Transparência</a>
-    <a href="#" class="nav-link" onclick="navegar('bo', this)"><i class="fas fa-pen-fancy"></i>B.O.</a>
-    <a href="#" class="nav-link" onclick="navegar('denuncia', this)"><i class="fas fa-mask"></i>Denúncia</a>
-    <a href="#" class="nav-link" onclick="acessoRestrito()"><i class="fas fa-lock"></i>Admin</a>
+    <a href="#" class="nav-link active" onclick="navegar('home', this)"><i class="fas fa-home"></i>Início</a>
+    <a href="#" class="nav-link" onclick="navegar('transparencia', this)"><i class="fas fa-search"></i>Pública</a>
+    <a href="#" class="nav-link" onclick="navegar('bo', this)"><i class="fas fa-shield-alt"></i>QAP</a>
+    <a href="#" class="nav-link" onclick="navegar('docs', this)"><i class="fas fa-folder-open"></i>Docs</a>
+    <a href="#" class="nav-link" onclick="navegar('denuncia', this)"><i class="fas fa-mask"></i>181</a>
+    <a href="#" class="nav-link" onclick="acessoRestrito()"><i class="fas fa-lock"></i>Adm</a>
 </nav>
 
 <script>
@@ -203,10 +305,15 @@
     firebase.initializeApp(fbConfig);
     const db = firebase.database();
 
-    const CRIMES = [{n:"Homicídio",p:30},{n:"Tráfico",p:15},{n:"Roubo",p:10},{n:"Arma",p:8},{n:"Desacato",p:5},{n:"Fuga",p:7}];
+    const CRIMES = [
+        {n:"Homicídio",p:30},{n:"Tent. Homicídio",p:20},{n:"Tráfico",p:15},{n:"Tráfico Armas",p:30},
+        {n:"Roubo",p:10},{n:"Assalto Banco",p:25},{n:"Arma Restrita",p:15},{n:"Desacato",p:5},
+        {n:"Fuga",p:7},{n:"Form. Quadrilha",p:12},{n:"Sequestro",p:25},{n:"Suborno",p:20}
+    ];
+
     const cDiv = document.getElementById('calc-container');
     CRIMES.forEach((c, i) => {
-        cDiv.innerHTML += `<label style="display:flex; gap:10px; margin-bottom:8px;"><input type="checkbox" value="${i}" onchange="calc()"> ${c.n} (${c.p}m)</label>`;
+        cDiv.innerHTML += `<label style="display:flex; gap:10px; margin-bottom:8px; font-size:0.8rem;"><input type="checkbox" value="${i}" onchange="calc()"> ${c.n} (${c.p}m)</label>`;
     });
 
     function navegar(aba, el) {
@@ -217,50 +324,102 @@
     }
 
     function acessoRestrito() {
-        if(prompt("SENHA:") === "KaqFemboy") navegar('restrito', document.querySelector('.nav-link:last-child'));
+        if(prompt("SENHA BIOMÉTRICA:") === "KaqFemboy") navegar('restrito', document.querySelector('.nav-link:last-child'));
     }
 
+    // FIREBASE - POSTS E LOGS
     function salvarPost() {
         const tipo = document.getElementById('post-tipo').value;
         const autor = document.getElementById('post-autor').value;
         const texto = document.getElementById('post-texto').value;
+        const status = document.getElementById('status-set').value;
         if(!autor || !texto) return;
+
         db.ref('postagens').push({ tipo, autor, texto, data: new Date().toLocaleString('pt-BR') });
-        alert("Publicado!");
+        db.ref('server_status').set(status);
+        db.ref('logs').push(`${new Date().toLocaleTimeString()} - ${autor} publicou em ${tipo}`);
+        alert("SISTEMA ATUALIZADO!");
     }
 
     db.ref('postagens').on('value', snap => {
         const fA = document.getElementById('feed-anuncios'); const fT = document.getElementById('feed-transparencia');
-        fA.innerHTML = ""; fT.innerHTML = "";
+        const fM = document.getElementById('feed-mandados');
+        fA.innerHTML = ""; fT.innerHTML = ""; fM.innerHTML = "";
         snap.forEach(i => {
             const v = i.val();
             const h = `<div class="post-item"><div class="post-meta">${v.data} | ${v.autor}</div><div class="post-content">${v.texto}</div></div>`;
-            if(v.tipo === 'anuncio') fA.insertAdjacentHTML('afterbegin', h); else fT.insertAdjacentHTML('afterbegin', h);
+            if(v.tipo === 'anuncio') fA.insertAdjacentHTML('afterbegin', h);
+            else if(v.tipo === 'transparencia') fT.insertAdjacentHTML('afterbegin', h);
+            else if(v.tipo === 'mandado') fM.insertAdjacentHTML('afterbegin', `<p>🔴 MANDADO: ${v.texto}</p>`);
         });
     });
 
+    db.ref('server_status').on('value', snap => {
+        document.getElementById('server-status').innerText = `SISTEMA ONLINE | CONDIÇÃO: ${snap.val() || 'VERDE'}`;
+    });
+
+    db.ref('logs').limitToLast(10).on('value', snap => {
+        const l = document.getElementById('admin-logs'); l.innerHTML = "";
+        snap.forEach(i => l.innerHTML += `<div>${i.val()}</div>`);
+    });
+
+    // RÁDIO
+    function enviarRadio() {
+        const m = document.getElementById('radio-msg').value; if(!m) return;
+        db.ref('radio').push({ m, t: new Date().toLocaleTimeString() });
+        document.getElementById('radio-msg').value = "";
+    }
+    db.ref('radio').limitToLast(15).on('value', snap => {
+        const c = document.getElementById('chat-radio'); c.innerHTML = "";
+        snap.forEach(i => c.innerHTML += `<div><span style="color:var(--pcesp-gold)">[${i.val().t}]</span> ${i.val().m}</div>`);
+        c.scrollTop = c.scrollHeight;
+    });
+
+    // OPERACIONAL
+    function consultarPlaca() {
+        const p = document.getElementById('cons-placa').value;
+        if(!p) return;
+        alert("CONSULTANDO PRODESP... Placa " + p + " sem restrições.");
+    }
+
     function enviarBO() {
-        const n = document.getElementById('bo-nome').value; const r = document.getElementById('bo-relato').value;
-        enviarDiscord("🚨 NOVO B.O.", `**Nome:** ${n}\n**Relato:** ${r}`, 3447003);
-        alert("Enviado!");
+        const n = document.getElementById('bo-nome').value;
+        const r = document.getElementById('bo-relato').value;
+        const a = document.getElementById('bo-apreensao').value;
+        enviarDiscord("🚨 NOVO BOLETIM", `**Envolvido:** ${n}\n**Relato:** ${r}\n**Apreensões:** ${a}`, 3447003);
+        alert("BO PROTOCOLADO!");
     }
 
     function enviarDenuncia() {
-        const l = document.getElementById('den-local').value; const r = document.getElementById('den-relato').value;
-        enviarDiscord("🕵️ DENÚNCIA 181", `**Local:** ${l}\n**Relato:** ${r}`, 15105570);
-        alert("Informação enviada!");
+        const t = document.getElementById('den-tipo').value;
+        const l = document.getElementById('den-local').value;
+        const r = document.getElementById('den-relato').value;
+        enviarDiscord("🕵️ 181 / CORREGEDORIA", `**Tipo:** ${t}\n**Alvo/Local:** ${l}\n**Relato:** ${r}`, 15105570);
+        alert("TRANSMISSÃO CONCLUÍDA.");
+    }
+
+    function enviarLicenca() {
+        const n = document.getElementById('lic-nome').value;
+        const d = document.getElementById('lic-dias').value;
+        enviarDiscord("📅 SOLICITAÇÃO DE LICENÇA", `**Policial:** ${n}\n**Período:** ${d}`, 16776960);
+        alert("RH NOTIFICADO.");
+    }
+
+    function copiarModelo(tipo) {
+        let txt = tipo === 'oficio' ? "OFÍCIO PCESP Nº 001/2024\nAssunto: Solicitação de Informações..." : "TERMO DE APREENSÃO\nItem: \nMotivo: ";
+        navigator.clipboard.writeText(txt); alert("Copiado!");
     }
 
     function calc() {
         let pt = 0; let sl = [];
         document.querySelectorAll('#calc-container input:checked').forEach(i => { pt += CRIMES[i.value].p; sl.push(CRIMES[i.value].n); });
-        document.getElementById('txt-calculado').value = `PCESP\nCRIMES: ${sl.join(', ')}\nPENA: ${pt} meses`;
+        document.getElementById('txt-calculado').value = `PCESP | GUIA DE RECOLHIMENTO\n------------------------\nCRIMES: ${sl.join(', ')}\nPENA: ${pt} MESES\n------------------------`;
     }
 
-    function copiarPena() { const t = document.getElementById('txt-calculado'); t.select(); document.execCommand('copy'); }
+    function copiarPena() { const t = document.getElementById('txt-calculado'); t.select(); document.execCommand('copy'); alert("Copiado!"); }
 
     async function enviarDiscord(t, m, c) {
-        await fetch(webhookURL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ embeds: [{ title: t, description: m, color: c }] }) });
+        await fetch(webhookURL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ embeds: [{ title: t, description: m, color: c, footer: {text: "Sistema PCESP | Brasil Legacy"} }] }) });
     }
 </script>
 
