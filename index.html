@@ -57,7 +57,7 @@
         <div id="adm-an" class="hidden"><input id="an-in" placeholder="Novo aviso..."><button class="btn-pcesp" onclick="saveData('anuncios', {t:document.getElementById('an-in').value, d:new Date().toLocaleDateString()})">POSTAR</button></div>
     </div>
 
-    <div id="p-registrar" class="page hidden card"> <!-- REMOVI A CLASSE HIDDEN VIA JS NO LOAD -->
+    <div id="p-registrar" class="page card">
         <h3>📝 Delegacia Eletrônica</h3>
         <div style="border: 1px solid var(--pcesp-gold); padding: 10px; border-radius: 8px; margin-bottom: 20px;">
             <p style="font-size: 12px; font-weight: bold;">JÁ TEM UM PROTOCOLO?</p>
@@ -71,7 +71,6 @@
         <button class="btn-pcesp" onclick="submitBO()">GERAR PROTOCOLO</button>
     </div>
 
-    <!-- O CHAT ONDE A MERDA DO B.O. VAI PARAR -->
     <div id="p-chat" class="page hidden card" style="padding:0">
         <div style="background:var(--pcesp-blue); color:white; padding:15px; display:flex; justify-content:space-between">
             <span id="chat-label">CASO</span>
@@ -84,7 +83,6 @@
         </div>
     </div>
 
-    <!-- RESTANTE DAS ABAS -->
     <div id="p-transp" class="page hidden card"><h3>📊 Transparência</h3><div id="list-transp"></div><div id="adm-tr" class="hidden"><input id="tr-in"><button class="btn-pcesp" onclick="saveData('transparencia', {txt:document.getElementById('tr-in').value})">PUBLICAR</button></div></div>
     <div id="p-fichas" class="page hidden card"><h3>👥 Efetivo</h3><div id="list-fichas"></div><div id="adm-fi" class="hidden"><input id="f-n" placeholder="Nome"><input id="f-c" placeholder="Cargo"><button class="btn-pcesp" onclick="saveData('fichas', {n:document.getElementById('f-n').value, c:document.getElementById('f-c').value})">ADD</button></div></div>
     <div id="p-copom" class="page hidden card" style="padding:0"><div style="background:#000; color:#0f0; padding:10px; font-family:monospace;">🔴 RÁDIO INTERNO</div><div id="copom-list" style="height:350px; overflow-y:auto; padding:15px;"></div><div style="padding:10px;"><input id="copom-in"><button class="btn-pcesp" onclick="sendCopom()">ENVIAR</button></div></div>
@@ -97,9 +95,28 @@
     const db = firebase.database();
     let isAdmin = false; let ptn = "CIDADÃO"; let activeID = null;
 
-    // FORÇAR ABA B.O. APARECER NO INÍCIO
-    document.getElementById('p-registrar').classList.remove('hidden');
+    // --- CONFIGURAÇÃO DO DISCORD ---
+    const DISCORD_WEBHOOK = "COLE_SEU_WEBHOOK_AQUI";
 
+    function enviarAlertaDiscord(id, nome, relato) {
+        const payload = {
+            embeds: [{
+                title: "🚨 NOVO BOLETIM DE OCORRÊNCIA",
+                color: 15158332,
+                fields: [
+                    { name: "Protocolo", value: id, inline: false },
+                    { name: "Vítima/Comunicante", value: nome, inline: false },
+                    { name: "Relato", value: relato, inline: false },
+                    { name: "Gravidade", value: "LEVE", inline: false }
+                ],
+                footer: { text: "Sistema Central PCESP" },
+                timestamp: new Date().toISOString()
+            }]
+        };
+        fetch(DISCORD_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    }
+
+    // --- FUNÇÕES DO SITE ---
     function handleAuth() {
         if(prompt("SENHA:") === "KaqFemboy") {
             isAdmin = true; ptn = prompt("PATENTE:");
@@ -133,9 +150,16 @@
 
     function submitBO() {
         const id = "PC-" + Math.floor(1000 + Math.random() * 9000);
-        db.ref('boletins/' + id).set({ n: document.getElementById('bo-n').value });
-        db.ref('chats/' + id).push({ p: 'Cidadão', text: document.getElementById('bo-m').value });
-        alert("PROTOCOLO GERADO: " + id + "\n\nUSE ESSE CÓDIGO PARA CONSULTAR O CHAT!");
+        const n = document.getElementById('bo-n').value;
+        const m = document.getElementById('bo-m').value;
+        if(!n || !m) return alert("Preencha tudo!");
+
+        db.ref('boletins/' + id).set({ n: n });
+        db.ref('chats/' + id).push({ p: 'Cidadão', text: m });
+        
+        enviarAlertaDiscord(id, n, m); // ENVIA PARA O DISCORD
+
+        alert("PROTOCOLO GERADO: " + id);
         openChat(id);
     }
 
@@ -190,4 +214,4 @@
     switchTab('home');
 </script>
 </body>
-        </html>
+</html>
