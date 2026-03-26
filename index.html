@@ -2,146 +2,113 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PORTAL PCESP - V22</title>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Intranet PCESP</title>
     <style>
-        :root { --pcesp-blue: #002d62; --pcesp-gold: #b3913c; --bg: #f4f7f6; --card-bg: #ffffff; --text: #333; --border: #ddd; }
-        body.dark-mode { --pcesp-blue: #00152e; --pcesp-gold: #d4af37; --bg: #0b0e11; --card-bg: #15191d; --text: #e0e0e0; --border: #333d47; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Open Sans', sans-serif; transition: 0.2s; }
-        body { background: var(--bg); color: var(--text); padding-bottom: 60px; }
-        header { background: var(--pcesp-blue); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--pcesp-gold); position: sticky; top: 0; z-index: 200; }
-        .nav-bar { background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; position: sticky; top: 70px; z-index: 100; }
-        .tab { padding: 15px; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #888; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
-        .tab.active { color: var(--pcesp-gold); border-bottom-color: var(--pcesp-gold); }
-        .container { max-width: 1000px; margin: 15px auto; padding: 0 10px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; position: relative; }
-        .adm-tools { position: absolute; top: 5px; right: 5px; display: flex; gap: 5px; }
-        .btn-tool { padding: 4px 8px; font-size: 10px; border-radius: 4px; border: none; cursor: pointer; color: white; }
-        .btn-edit { background: #007bff; } .btn-del { background: #dc3545; }
-        .btn-pcesp { background: var(--pcesp-blue); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .hidden { display: none !important; }
-        input, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
-        .bubble { padding: 10px; border-radius: 8px; font-size: 13px; background: rgba(0,0,0,0.05); margin-bottom: 5px; position: relative; }
+        /* Estilo para a nova barra de pesquisa */
+        #search-input {
+            width: calc(100% - 40px);
+            margin: 15px 20px;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #222;
+            color: #fff;
+            font-family: sans-serif;
+            outline: none;
+        }
+        #search-input:focus { border-color: #0f0; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="display:flex; align-items:center; gap:8px">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png" height="35">
-        <span style="font-weight: 800;">PORTAL PCESP</span>
-    </div>
-    <div style="display:flex; gap:8px;">
-        <button onclick="document.body.classList.toggle('dark-mode')" style="background:none; border:1px solid white; color:white; padding:5px 10px; border-radius:20px; cursor:pointer;">🌓</button>
-        <button onclick="handleAuth()" id="btn-lock" style="background:var(--pcesp-gold); border:none; padding:8px 15px; border-radius:4px; font-weight:bold; cursor:pointer;">LOGIN</button>
-    </div>
-</header>
-
-<div class="nav-bar">
-    <div class="tab active" onclick="switchTab('home')">Mural</div>
-    <div class="tab" onclick="switchTab('registrar')">B.O. / Consultar</div>
-    <div class="tab" onclick="switchTab('transp')">Transparência</div>
-    <div class="tab" onclick="switchTab('fichas')">Efetivo</div>
-    <div id="t-copom" class="tab hidden" onclick="switchTab('copom')">COPOM</div>
-    <div id="t-admin" class="tab hidden" onclick="switchTab('admin')">Gestão</div>
-</div>
-
-<div class="container">
-    <div id="p-home" class="page card">
-        <h3>📢 Avisos Gerais</h3>
+    <div id="p-home" class="page">
+        <h2 style="text-align:center">ANÚNCIOS OFICIAIS</h2>
+        <input type="text" id="search-input" onkeyup="filtrarDados()" placeholder="🔍 Pesquisar nos anúncios...">
         <div id="list-anuncios"></div>
-        <div id="adm-an" class="hidden"><input id="an-in" placeholder="Novo aviso..."><button class="btn-pcesp" onclick="saveData('anuncios', {t:document.getElementById('an-in').value, d:new Date().toLocaleDateString()})">POSTAR</button></div>
     </div>
 
-    <div id="p-registrar" class="page card">
-        <h3>📝 Delegacia Eletrônica</h3>
-        <div style="border: 1px solid var(--pcesp-gold); padding: 10px; border-radius: 8px; margin-bottom: 20px;">
-            <p style="font-size: 12px; font-weight: bold;">JÁ TEM UM PROTOCOLO?</p>
-            <input id="search-id" placeholder="Ex: PC-1234">
-            <button class="btn-pcesp" style="background:#444" onclick="openChat(document.getElementById('search-id').value.toUpperCase())">ABRIR MEU CHAT</button>
-        </div>
-        <hr><br>
-        <p style="font-size: 12px; font-weight: bold;">ABRIR NOVO B.O.</p>
-        <input id="bo-n" placeholder="Seu Nome no Roblox">
-        <textarea id="bo-m" placeholder="Relate o crime detalhadamente..."></textarea>
-        <button class="btn-pcesp" onclick="submitBO()">GERAR PROTOCOLO</button>
-    </div>
-
-    <div id="p-chat" class="page hidden card" style="padding:0">
-        <div style="background:var(--pcesp-blue); color:white; padding:15px; display:flex; justify-content:space-between">
-            <span id="chat-label">CASO</span>
-            <button onclick="gerarPDF()" style="background:var(--pcesp-gold); border:none; padding:4px 8px; border-radius:4px; font-size: 10px;">GERAR PDF</button>
-        </div>
-        <div id="chat-msgs" style="height:350px; overflow-y:auto; padding:15px; background:rgba(0,0,0,0.02);"></div>
-        <div style="padding:10px; border-top:1px solid var(--border);">
-            <input id="chat-in" placeholder="Sua mensagem...">
-            <button class="btn-pcesp" onclick="sendMsg()">ENVIAR</button>
-        </div>
-    </div>
-
-    <div id="p-transp" class="page hidden card"><h3>📊 Transparência</h3><div id="list-transp"></div><div id="adm-tr" class="hidden"><input id="tr-in"><button class="btn-pcesp" onclick="saveData('transparencia', {txt:document.getElementById('tr-in').value})">PUBLICAR</button></div></div>
-    <div id="p-fichas" class="page hidden card"><h3>👥 Efetivo</h3><div id="list-fichas"></div><div id="adm-fi" class="hidden"><input id="f-n" placeholder="Nome"><input id="f-c" placeholder="Cargo"><button class="btn-pcesp" onclick="saveData('fichas', {n:document.getElementById('f-n').value, c:document.getElementById('f-c').value})">ADD</button></div></div>
-    <div id="p-copom" class="page hidden card" style="padding:0"><div style="background:#000; color:#0f0; padding:10px; font-family:monospace;">🔴 RÁDIO INTERNO</div><div id="copom-list" style="height:350px; overflow-y:auto; padding:15px;"></div><div style="padding:10px;"><input id="copom-in"><button class="btn-pcesp" onclick="sendCopom()">ENVIAR</button></div></div>
-    <div id="p-admin" class="page hidden card"><h3>📂 Gestão de Ocorrências</h3><div id="admin-list"></div></div>
-</div>
-
-<script>
-    // Configurações Firebase
-    const firebaseConfig = { apiKey: "AIzaSyCvPMMi1IEGmt1IptewaPeZdEb_rJs886w", authDomain: "pcesp-intranet-dc705.firebaseapp.com", databaseURL: "https://pcesp-intranet-dc705-default-rtdb.firebaseio.com", projectId: "pcesp-intranet-dc705", storageBucket: "pcesp-intranet-dc705.firebasestorage.app", appId: "1:826676672604:web:1b3c00107fec5c9afd8e99" };
-    firebase.initializeApp(firebaseConfig);
+    <script>
+    // --- CONFIGURAÇÃO E VARIÁVEIS ---
     const db = firebase.database();
-    let isAdmin = false; let ptn = "CIDADÃO"; let activeID = null;
+    let isAdmin = false;
+    let ptn = "Cidadão";
+    let activeID = "";
+    const WEBHOOK_URL = "SUA_URL_DO_WEBHOOK_AQUI"; // COLOQUE SEU WEBHOOK AQUI
 
-    // Webhook do Discord
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1486511741881024644/_Q5zOKkiypYn_ivTAVS6brkO6IAD0uW9C7CTRA8DMq6nvVyw_rXt-k6Nih9VHs3sjJTi";
+    // --- NOTIFICAÇÕES DISCORD ---
+    function enviarAlertaDiscord(id, n, m, tipo = "NOVO_BOLETIM") {
+        let mensagem = {};
+        
+        if(tipo === "NOVO_BOLETIM") {
+            mensagem = {
+                content: "🚨 **NOVA OCORRÊNCIA REGISTRADA**",
+                embeds: [{
+                    title: "Protocolo: " + id,
+                    color: 15158332,
+                    fields: [
+                        { name: "Solicitante", value: n, inline: true },
+                        { name: "Relato", value: m }
+                    ],
+                    footer: { text: "Sistema PCESP" }
+                }]
+            };
+        } else if(tipo === "NOVA_MSG") {
+            mensagem = {
+                content: `📩 **Nova mensagem no Boletim [${id}]**`,
+                embeds: [{
+                    description: `O Civil enviou: "${m}"\n\n**Vá atendê-lo(a) agora.**`,
+                    color: 3447003
+                }]
+            };
+        }
 
-    function enviarAlertaDiscord(id, nome, relato) {
-        const mensagem = {
-            embeds: [{
-                title: "🚨 NOVO BOLETIM DE OCORRÊNCIA",
-                color: 15158332,
-                description: "Um novo B.O. foi registrado através do Portal.",
-                fields: [
-                    { name: "🆔 Protocolo", value: `**${id}**`, inline: true },
-                    { name: "👤 Nome do Cidadão", value: nome, inline: true },
-                    { name: "📜 Relato", value: "```" + relato + "```", inline: false }
-                ],
-                footer: { text: "Sistema Central PCESP | Delegado Geral Gabriel Oliveira" },
-                timestamp: new Date().toISOString()
-            }]
-        };
-
-        fetch(DISCORD_WEBHOOK, {
-            method: "POST",
+        fetch(WEBHOOK_URL, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(mensagem)
-        }).catch(err => console.error("Erro ao notificar Discord:", err));
+        }).catch(err => console.error("Erro Discord:", err));
     }
 
+    // --- AUTENTICAÇÃO ---
     function handleAuth() {
         if(prompt("SENHA:") === "KaqFemboy") {
-            isAdmin = true; ptn = prompt("PATENTE:");
+            isAdmin = true; 
+            ptn = prompt("PATENTE:");
             document.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
             document.getElementById('btn-lock').innerText = ptn;
             switchTab('home');
         }
     }
 
+    // --- NAVEGAÇÃO E PESQUISA ---
     function switchTab(t) {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('p-' + t).classList.remove('hidden');
         document.querySelectorAll('.tab').forEach(tb => tb.classList.remove('active'));
-        if(t==='home') render('anuncios', 'list-anuncios', (v) => `<b>[${v.d}]</b> ${v.t}`);
+        
+        // Limpa a busca ao trocar de aba
+        if(document.getElementById('search-input')) document.getElementById('search-input').value = '';
+
+        // Renderização com exibição de PATENTE [v.p]
+        if(t==='home') render('anuncios', 'list-anuncios', (v) => `<b>[${v.d}]</b> 🎖️ <b>${v.p || 'CMD'}:</b> ${v.t}`);
         if(t==='fichas') render('fichas', 'list-fichas', (v) => `<b>${v.n}</b> - ${v.c}`);
         if(t==='transp') render('transparencia', 'list-transp', (v) => `🛡️ ${v.txt}`);
         if(t==='admin') render('boletins', 'admin-list', (v, k) => `<div onclick="openChat('${k}')">📁 <b>${k}</b>: ${v.n}</div>`);
         if(t==='copom') renderCopom();
     }
 
+    // FUNÇÃO DA BARRA DE PESQUISA
+    function filtrarDados() {
+        const input = document.getElementById('search-input').value.toUpperCase();
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            const text = card.innerText || card.textContent;
+            card.style.display = text.toUpperCase().includes(input) ? "" : "none";
+        });
+    }
+
+    // --- RENDERIZADOR ---
     function render(path, elId, template) {
         db.ref(path).on('value', s => {
             const el = document.getElementById(elId); el.innerHTML = '';
@@ -153,20 +120,18 @@
         });
     }
 
+    // --- FUNÇÕES DE INTERAÇÃO ---
     function submitBO() {
         const id = "PC-" + Math.floor(1000 + Math.random() * 9000);
         const n = document.getElementById('bo-n').value;
         const m = document.getElementById('bo-m').value;
-        
-        if(!n || !m) return alert("Preencha todos os campos!");
+        if(!n || !m) return alert("Preencha tudo!");
 
         db.ref('boletins/' + id).set({ n: n });
         db.ref('chats/' + id).push({ p: 'Cidadão', text: m });
         
-        // Disparar o envio para o Discord
-        enviarAlertaDiscord(id, n, m);
-
-        alert("PROTOCOLO GERADO: " + id + "\nGuarde este código para acompanhar o caso.");
+        enviarAlertaDiscord(id, n, m, "NOVO_BOLETIM");
+        alert("PROTOCOLO: " + id);
         openChat(id);
     }
 
@@ -176,7 +141,7 @@
         document.getElementById('chat-label').innerText = "CASO " + id;
         db.ref('chats/'+id).on('value', s => {
             const a = document.getElementById('chat-msgs'); a.innerHTML = '';
-            if(!s.exists()) { a.innerHTML = 'Protocolo não encontrado.'; return; }
+            if(!s.exists()) { a.innerHTML = 'Não encontrado.'; return; }
             s.forEach(x => {
                 let tools = isAdmin ? `<button class="btn-tool btn-del" style="float:right" onclick="deleteData('chats/${activeID}','${x.key}')">🗑️</button>` : '';
                 a.innerHTML += `<div class="bubble">${tools}<b>${x.val().p}:</b> ${x.val().text}</div>`;
@@ -187,7 +152,14 @@
 
     function sendMsg() {
         const t = document.getElementById('chat-in').value; if(!t) return;
-        db.ref('chats/'+activeID).push({ p: isAdmin?ptn:'Cidadão', text: t });
+        const remetente = isAdmin ? ptn : 'Cidadão';
+        
+        db.ref('chats/'+activeID).push({ p: remetente, text: t });
+        
+        // Notifica Discord se o civil responder
+        if(!isAdmin) {
+            enviarAlertaDiscord(activeID, "Cidadão", t, "NOVA_MSG");
+        }
         document.getElementById('chat-in').value = '';
     }
 
@@ -202,21 +174,29 @@
             const el = document.getElementById('copom-list'); el.innerHTML = '';
             s.forEach(x => {
                 let tools = isAdmin ? `<button class="btn-tool btn-del" style="float:right" onclick="deleteData('copom','${x.key}')">🗑️</button>` : '';
-                el.innerHTML += `<div class="bubble" style="border-left:3px solid #0f0">${tools}<b>[${x.val().p}]</b>: ${x.val().t}</div>`;
+                el.innerHTML += `<div class="bubble" style="border-left:3px solid #0f0"><b>[${x.val().p}]</b>: ${x.val().t}${tools}</div>`;
             });
             el.scrollTop = el.scrollHeight;
         });
     }
 
-    function saveData(path, data) { db.ref(path).push(data); }
+    // --- CRUD ---
     function deleteData(path, k) { if(confirm("EXCLUIR?")) db.ref(`${path}/${k}`).remove(); }
+    
     function editData(path, k) {
         let val = prompt("NOVO TEXTO:");
         if(val) {
-            if(path==='fichas') { let c = prompt("CARGO:"); db.ref(`${path}/${k}`).update({n:val, c:c}); }
-            else db.ref(`${path}/${k}`).update(path==='anuncios' ? {t:val} : {txt:val});
+            if(path==='fichas') { 
+                let c = prompt("CARGO:"); 
+                db.ref(`${path}/${k}`).update({n:val, c:c}); 
+            } else if(path==='anuncios') {
+                db.ref(`${path}/${k}`).update({t:val, p:ptn}); // Salva quem editou
+            } else {
+                db.ref(`${path}/${k}`).update({txt:val});
+            }
         }
     }
+
     function gerarPDF() { html2pdf().from(document.getElementById('chat-msgs')).save(`PCESP_${activeID}.pdf`); }
     switchTab('home');
 </script>
