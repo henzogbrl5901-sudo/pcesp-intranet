@@ -66,8 +66,8 @@
         </div>
         <hr><br>
         <p style="font-size: 12px; font-weight: bold;">ABRIR NOVO B.O.</p>
-        <input id="bo-n" placeholder="Nome no Roblox">
-        <textarea id="bo-m" placeholder="Relate o crime..."></textarea>
+        <input id="bo-n" placeholder="Seu Nome no Roblox">
+        <textarea id="bo-m" placeholder="Relate o crime detalhadamente..."></textarea>
         <button class="btn-pcesp" onclick="submitBO()">GERAR PROTOCOLO</button>
     </div>
 
@@ -90,12 +90,13 @@
 </div>
 
 <script>
+    // Configurações Firebase
     const firebaseConfig = { apiKey: "AIzaSyCvPMMi1IEGmt1IptewaPeZdEb_rJs886w", authDomain: "pcesp-intranet-dc705.firebaseapp.com", databaseURL: "https://pcesp-intranet-dc705-default-rtdb.firebaseio.com", projectId: "pcesp-intranet-dc705", storageBucket: "pcesp-intranet-dc705.firebasestorage.app", appId: "1:826676672604:web:1b3c00107fec5c9afd8e99" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let isAdmin = false; let ptn = "CIDADÃO"; let activeID = null;
 
-    // WEBHOOK DIRETO
+    // Webhook do Discord
     const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1486511741881024644/_Q5zOKkiypYn_ivTAVS6brkO6IAD0uW9C7CTRA8DMq6nvVyw_rXt-k6Nih9VHs3sjJTi";
 
     function enviarAlertaDiscord(id, nome, relato) {
@@ -103,22 +104,22 @@
             embeds: [{
                 title: "🚨 NOVO BOLETIM DE OCORRÊNCIA",
                 color: 15158332,
+                description: "Um novo B.O. foi registrado através do Portal.",
                 fields: [
-                    { name: "Protocolo", value: `**${id}**`, inline: true },
-                    { name: "Vítima/Comunicante", value: nome, inline: true },
-                    { name: "Natureza", value: "Registro Geral", inline: true },
-                    { name: "Gravidade", value: "LEVE", inline: true },
-                    { name: "Relato do Crime", value: relato, inline: false }
+                    { name: "🆔 Protocolo", value: `**${id}**`, inline: true },
+                    { name: "👤 Nome do Cidadão", value: nome, inline: true },
+                    { name: "📜 Relato", value: "```" + relato + "```", inline: false }
                 ],
                 footer: { text: "Sistema Central PCESP | Delegado Geral Gabriel Oliveira" },
                 timestamp: new Date().toISOString()
             }]
         };
 
-        const request = new XMLHttpRequest();
-        request.open("POST", DISCORD_WEBHOOK);
-        request.setRequestHeader('Content-type', 'application/json');
-        request.send(JSON.stringify(mensagem));
+        fetch(DISCORD_WEBHOOK, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mensagem)
+        }).catch(err => console.error("Erro ao notificar Discord:", err));
     }
 
     function handleAuth() {
@@ -162,9 +163,10 @@
         db.ref('boletins/' + id).set({ n: n });
         db.ref('chats/' + id).push({ p: 'Cidadão', text: m });
         
+        // Disparar o envio para o Discord
         enviarAlertaDiscord(id, n, m);
 
-        alert("PROTOCOLO GERADO: " + id);
+        alert("PROTOCOLO GERADO: " + id + "\nGuarde este código para acompanhar o caso.");
         openChat(id);
     }
 
