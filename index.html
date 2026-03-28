@@ -1,24 +1,286 @@
-<!-- TELA DE MANUTENÇÃO PCESP -->
-<div id="manutencao-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #020617; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PCESP | SISTEMA V7.0 OFICIAL</title>
     
-    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png" 
-         style="width: 120px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(197, 160, 89, 0.5));">
-    
-    <h1 style="color: #C5A059; font-family: 'Montserrat', sans-serif; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">
-        Sistema em Manutenção
-    </h1>
-    
-    <div style="width: 50px; height: 3px; background: #C5A059; margin-bottom: 20px;"></div>
-    
-    <p style="color: #f3f4f6; font-family: 'Montserrat', sans-serif; font-size: 0.8rem; line-height: 1.6; max-width: 300px;">
-        Estamos atualizando os protocolos de segurança e banco de dados da <b>PCESP</b>. 
-        <br><br>
-        O acesso será normalizado em breve.
-    </p>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
 
-    <div style="margin-top: 30px; display: flex; align-items: center; gap: 10px; color: #666; font-size: 0.6rem; font-family: sans-serif;">
-        <i class="fas fa-spinner fa-spin" style="color: #C5A059;"></i>
-        SINCRONIZANDO COM O SERVIDOR...
-    </div>
+    <style>
+        :root { --gold: #C5A059; --dark: #050810; --card: #111827; --txt: #f3f4f6; --danger: #ff4444; --blue: #38bdf8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        html, body { height: 100%; overflow: hidden; background: #020617; color: var(--txt); }
+        
+        header { background: var(--dark); padding: 10px; text-align: center; border-bottom: 2px solid var(--gold); height: 70px; }
+        header img { width: 40px; }
+        
+        #status-bar { background: rgba(197, 160, 89, 0.1); padding: 5px; font-size: 0.6rem; text-align: center; color: var(--gold); font-weight: 900; }
+
+        .container { height: calc(100vh - 180px); overflow-y: auto; padding: 15px; max-width: 700px; margin: 0 auto; -webkit-overflow-scrolling: touch; }
+
+        /* AVISO JURÍDICO INICIAL */
+        .alerta-cp { background: rgba(255, 68, 68, 0.1); border: 1px solid var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 20px; }
+        .alerta-cp b { color: var(--danger); font-size: 0.75rem; display: block; margin-bottom: 5px; }
+        .alerta-cp p { font-size: 0.65rem; color: #fca5a5; line-height: 1.3; }
+
+        /* ESTILO DOS CARDS */
+        .item-box { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 5px solid var(--gold); padding: 15px; margin-bottom: 15px; border-radius: 8px; position: relative; }
+        .item-box.anuncio { border-left-color: var(--blue); background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
+        .item-box b { color: var(--gold); display: block; margin-bottom: 5px; text-transform: uppercase; font-size: 0.8rem; }
+        .item-box.anuncio b { color: var(--blue); }
+        .item-box p { font-size: 0.75rem; line-height: 1.4; color: #cbd5e1; }
+
+        #adm-nav { background: var(--gold); display: none; padding: 10px; overflow-x: auto; white-space: nowrap; gap: 8px; border-bottom: 2px solid #000; }
+        .btn-adm { background: #000; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; font-size: 0.55rem; font-weight: 800; cursor: pointer; }
+
+        .card { background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+        .card h2 { font-size: 0.75rem; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; border-left: 4px solid var(--gold); padding-left: 10px; display: flex; align-items: center; gap: 8px; }
+        
+        input, textarea, select { width: 100%; background: #030712; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 0.8rem; outline:none; }
+        .btn-send { background: var(--gold); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; font-size: 0.7rem; }
+
+        #chat-area { height: 250px; overflow-y: auto; background: #000; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .msg { padding: 10px; border-radius: 10px; max-width: 85%; font-size: 0.75rem; }
+        .msg.policia { background: var(--gold); color: #000; align-self: flex-start; }
+        .msg.civil { background: #1f2937; color: #fff; align-self: flex-end; }
+
+        nav { position: fixed; bottom: 0; width: 100%; background: var(--dark); display: flex; justify-content: space-around; padding: 15px 0; border-top: 2px solid var(--gold); height: 75px; }
+        .n-link { color: #64748b; text-align: center; font-size: 0.55rem; font-weight: 800; cursor: pointer; text-decoration: none; }
+        .n-link i { font-size: 1.2rem; display: block; margin-bottom: 5px; }
+        .n-link.active { color: var(--gold); }
+
+        .hidden { display: none !important; }
+        .del-btn { color: var(--danger); position: absolute; top: 10px; right: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header><img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Bras%C3%A3o_da_Pol%C3%ADcia_Civil_do_Estado_de_S%C3%A3o_Paulo.png"></header>
+<div id="status-bar">DEPARTAMENTO DE POLÍCIA CIVIL - SP</div>
+
+<div id="adm-nav">
+    <button class="btn-adm" onclick="abrir('lista-geral')">📂 PROTOCOLOS</button>
+    <button class="btn-adm" onclick="abrir('adm-gerenciamento')">🛠️ LISTAS</button>
+    <button class="btn-adm" onclick="abrir('postar-aviso')">📢 POSTAR ANÚNCIO</button>
 </div>
-<!-- FIM DA TELA DE MANUTENÇÃO -->
+
+<div class="container" id="main-container">
+    
+    <!-- HOME COM AVISO DO CP -->
+    <section id="view-home" class="aba">
+        <div class="alerta-cp">
+            <b><i class="fas fa-gavel"></i> AVISO LEGAL: ART. 266 DO CP</b>
+            <p>Interromper ou perturbar serviço telegráfico, radiotelefônico ou de utilidade pública é CRIME. Trotes e falsas comunicações de crime resultam em prisão e multa. Seu IP e ID estão sendo registrados.</p>
+        </div>
+        
+        <div class="card">
+            <h2><i class="fas fa-star"></i> SERVIÇOS RÁPIDOS</h2>
+            <button class="btn-send" onclick="abrir('bo')" style="margin-bottom:10px">BOLETIM DE OCORRÊNCIA</button>
+            <button class="btn-send" onclick="abrir('panico')" style="background:var(--danger); color:white">BOTÃO DE PÂNICO S.O.S</button>
+        </div>
+
+        <div id="list-avisos"></div> <!-- Avisos curtos da Home -->
+    </section>
+
+    <!-- ABA DE ANÚNCIOS (SEPARADA) -->
+    <section id="view-anuncios" class="aba hidden">
+        <div class="card">
+            <h2><i class="fas fa-bullhorn"></i> COMUNICADOS OFICIAIS</h2>
+            <div id="list-anuncios"></div>
+        </div>
+    </section>
+
+    <!-- CENTRAL DE BO -->
+    <section id="view-bo" class="aba hidden">
+        <div class="card">
+            <h2>NOVA OCORRÊNCIA</h2>
+            <input type="text" id="bo-nome" placeholder="Nome Completo">
+            <textarea id="bo-relato" rows="4" placeholder="Descreva o ocorrido..."></textarea>
+            <button class="btn-send" onclick="gerarProtocolo('BO', 'bo-nome', 'bo-relato')">ENVIAR BOLETIM</button>
+        </div>
+        <div class="card">
+            <h2>CONSULTAR STATUS</h2>
+            <input type="text" id="bo-acesso" placeholder="Código (Ex: BO-XXXX)">
+            <button class="btn-send" onclick="acessarProtocolo('bo-acesso')">ENTRAR NO CHAT</button>
+        </div>
+        <button class="btn-send" style="background:#334155; color:white" onclick="abrir('corregedoria')">CONTATAR CORREGEDORIA</button>
+    </section>
+
+    <!-- CORREGEDORIA -->
+    <section id="view-corregedoria" class="aba hidden">
+        <div class="card">
+            <h2 style="color:var(--danger)">CANAL DA CORREGEDORIA</h2>
+            <textarea id="cor-relato" rows="4" placeholder="Denuncie abuso de autoridade ou má conduta..."></textarea>
+            <button class="btn-send" style="background:var(--danger); color:white" onclick="gerarProtocolo('COR', 'ANÔNIMO', 'cor-relato')">ENVIAR DENÚNCIA</button>
+        </div>
+        <button class="btn-send" style="background:#334155; color:white" onclick="abrir('bo')">VOLTAR</button>
+    </section>
+
+    <!-- MANDADOS -->
+    <section id="view-procurados" class="aba hidden"><div class="card"><h2>MANDADOS ATIVOS</h2><div id="list-procurados"></div></div></section>
+    
+    <!-- DICAS -->
+    <section id="view-dicas" class="aba hidden">
+        <div class="card">
+            <h2>CÓDIGOS E PROCEDIMENTOS</h2>
+            <div id="list-fichas"></div>
+        </div>
+    </section>
+
+    <!-- SOS -->
+    <section id="view-panico" class="aba hidden">
+        <div class="card" style="text-align:center">
+            <h2 style="justify-content:center">S.O.S</h2>
+            <button onclick="dispararPanico()" style="width:160px; height:160px; border-radius:50%; background:red; border:10px solid #500; color:white; font-size:1.8rem; font-weight:900; box-shadow:0 0 40px red;">PÂNICO</button>
+        </div>
+    </section>
+
+    <!-- ADM: CHAT E POSTAGENS -->
+    <section id="view-chat-ativo" class="aba hidden">
+        <div id="proto-cod" class="protocolo-header" style="text-align:center; color:var(--gold); font-weight:900; margin-bottom:10px;"></div>
+        <div id="chat-area"></div>
+        <div style="display:flex; gap:5px;"><input type="text" id="chat-in" placeholder="Mensagem..."><button class="btn-send" style="width:60px" onclick="enviarMsg()"><i class="fas fa-paper-plane"></i></button></div>
+        <button class="btn-send" style="background:#334155; color:white; margin-top:10px" onclick="abrir('home')">FECHAR</button>
+    </section>
+
+    <section id="view-postar-aviso" class="aba hidden">
+        <div class="card">
+            <h2>POSTAR CONTEÚDO</h2>
+            <select id="post-destino"><option value="avisos">AVISO (HOME)</option><option value="anuncios">ANÚNCIO OFICIAL</option></select>
+            <input type="text" id="post-tit" placeholder="Título"><textarea id="post-msg" rows="5" placeholder="Texto..."></textarea>
+            <button class="btn-send" onclick="addDB(document.getElementById('post-destino').value, {tit: document.getElementById('post-tit').value, txt: document.getElementById('post-msg').value})">PUBLICAR AGORA</button>
+        </div>
+    </section>
+
+    <section id="view-adm-gerenciamento" class="aba hidden">
+        <div class="card">
+            <h2>GERENCIAR LISTAS</h2>
+            <select id="adm-tipo"><option value="procurados">MANDADO</option><option value="fichas">DICA/CÓDIGO</option></select>
+            <input type="text" id="adm-val" placeholder="Informação"><button class="btn-send" onclick="addDB(document.getElementById('adm-tipo').value, {txt: document.getElementById('adm-val').value})">POSTAR</button>
+        </div>
+    </section>
+
+    <section id="view-lista-geral" class="aba hidden"><div class="card"><h2>PROTOCOLOS ATIVOS</h2><div id="list-adm-geral"></div></div></section>
+</div>
+
+<nav>
+    <a class="n-link active" onclick="abrir('home', this)"><i class="fas fa-home"></i>Início</a>
+    <a class="n-link" onclick="abrir('anuncios', this)"><i class="fas fa-bullhorn"></i>Anúncios</a>
+    <a class="n-link" onclick="abrir('procurados', this)"><i class="fas fa-handcuffs"></i>Mandados</a>
+    <a class="n-link" onclick="abrir('dicas', this)"><i class="fas fa-book"></i>Dicas</a>
+    <a class="n-link" onclick="validaAcesso()"><i class="fas fa-lock"></i>ADM</a>
+</nav>
+
+<script>
+    const firebaseConfig = { databaseURL: "https://pcesp-rp-default-rtdb.firebaseio.com/" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const HOOK_CHATS = "https://discord.com/api/webhooks/1486877206973124748/DEXwlrrEB2rYjl0kcEkQU0nRbQ-YAnraxTCf3nY8Km_Sbxb4IEsJKozvrlYLAdhkI9aM";
+    const HOOK_SOS = "https://discord.com/api/webhooks/1487277710857343076/jhUMYwaL6hJApSuVL99Zk-aPPjSN3pCLNOQX57yH0POdAnRGtwNC_7Y7cU5wsBr5mhmm";
+
+    let curID = null, isAdm = false;
+
+    function abrir(id, el) {
+        document.querySelectorAll('.aba').forEach(a => a.classList.add('hidden'));
+        document.getElementById('view-'+id).classList.remove('hidden');
+        if(el) { document.querySelectorAll('.n-link').forEach(l => l.classList.remove('active')); el.classList.add('active'); }
+        document.getElementById('main-container').scrollTop = 0;
+        
+        const tabelas = { 'home':'avisos', 'anuncios':'anuncios', 'procurados':'procurados', 'dicas':'fichas' };
+        if(tabelas[id]) carregarLista(tabelas[id], 'list-'+(id==='home'?'avisos':id));
+    }
+
+    function carregarLista(c, containerID) {
+        db.ref(c).on('value', s => {
+            const container = document.getElementById(containerID);
+            if(!container) return;
+            container.innerHTML = "";
+            if(s.exists()) s.forEach(i => {
+                let d = i.val();
+                let isAnuncio = c === 'anuncios';
+                let html = `<div class="item-box ${isAnuncio?'anuncio':''}">`;
+                if(d.tit) html += `<b>${d.tit}</b>`;
+                html += `<p>${d.txt}</p>`;
+                if(isAdm) html += `<i class="fas fa-trash del-btn" onclick="db.ref('${c}/${i.key}').remove()"></i>`;
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+        });
+    }
+
+    function validaAcesso() {
+        let p = prompt("SENHA:");
+        if(p === "KaqFemboy") { isAdm = true; document.getElementById('adm-nav').style.display='flex'; abrir('lista-geral'); carregarAdm(); }
+    }
+
+    function logDiscord(hook, t, msg) {
+        fetch(hook, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({embeds:[{title:t, description:msg, color:16768512}]}) });
+    }
+
+    function gerarProtocolo(tipo, idNome, idRelato) {
+        const n = (idNome === 'ANÔNIMO') ? 'ANÔNIMO' : document.getElementById(idNome).value;
+        const r = document.getElementById(idRelato).value;
+        if(!r) return alert("Descreva o ocorrido!");
+        const id = tipo + "-" + Math.random().toString(36).substr(2, 5).toUpperCase();
+        db.ref('chats/'+id).set({tipo, info: n}).then(() => {
+            db.ref('chats/'+id+'/mensagens').push({txt: r, tipo: 'civil'});
+            copiarProtocolo(id); entrarNoChat(id);
+            logDiscord(HOOK_CHATS, "🚨 NOVO PROTOCOLO: "+id, "**Autor:** "+n+"\n**Relato:** "+r);
+        });
+    }
+
+    function entrarNoChat(id) {
+        curID = id; abrir('chat-ativo'); document.getElementById('proto-cod').innerText = "CÓDIGO: " + id;
+        db.ref('chats/'+id+'/mensagens').on('value', s => {
+            const b = document.getElementById('chat-area'); b.innerHTML = "";
+            if(s.exists()) s.forEach(m => { b.innerHTML += `<div class="msg ${m.val().tipo}">${m.val().txt}</div>`; });
+            b.scrollTop = b.scrollHeight;
+        });
+    }
+
+    function enviarMsg() {
+        const i = document.getElementById('chat-in');
+        if(!i.value || !curID) return;
+        db.ref('chats/'+curID+'/mensagens').push({txt: i.value, tipo: isAdm?'policia':'civil'});
+        if(!isAdm) logDiscord(HOOK_CHATS, "💬 RESPOSTA EM "+curID, i.value);
+        i.value = "";
+    }
+
+    function dispararPanico() {
+        const loc = prompt("LOCALIZAÇÃO?");
+        if(loc) { logDiscord(HOOK_SOS, "🆘 PÂNICO ACIONADO!", "**LOCAL:** " + loc); alert("S.O.S ENVIADO!"); }
+    }
+
+    function carregarAdm() {
+        db.ref('chats').on('value', s => {
+            const l = document.getElementById('list-adm-geral'); l.innerHTML = "";
+            if(s.exists()) s.forEach(c => {
+                l.innerHTML += `<div class="item-box" onclick="entrarNoChat('${c.key}')" style="cursor:pointer">
+                    <b>${c.key}</b> - ${c.val().info}
+                    <i class="fas fa-trash del-btn" onclick="db.ref('chats/${c.key}').remove()"></i>
+                </div>`;
+            });
+        });
+    }
+
+    function acessarProtocolo(idInput) {
+        const id = document.getElementById(idInput).value.toUpperCase();
+        db.ref('chats/'+id).once('value', s => { if(s.exists()) entrarNoChat(id); else alert("Não encontrado."); });
+    }
+
+    function addDB(c, obj) { db.ref(c).push(obj).then(() => { alert("Publicado!"); }); }
+
+    function copiarProtocolo(t) {
+        const e = document.createElement('textarea'); e.value = t; document.body.appendChild(e); e.select(); document.execCommand('copy'); document.body.removeChild(e);
+        alert("PROTOCOLO COPIADO: " + t);
+    }
+    
+    carregarLista('avisos', 'list-avisos');
+</script>
+</body>
+</html>
